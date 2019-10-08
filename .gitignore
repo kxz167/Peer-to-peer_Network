@@ -1,3 +1,10 @@
 *.class
 
 .vscode
+
+obtained
+shared
+
+config_neighbors.txt
+config_peer.txt
+config_sharing.txt
