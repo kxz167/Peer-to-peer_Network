@@ -23,6 +23,10 @@ class p2p {
     private static RequestWelcomeHandler requestWelcomeHandler;
     private static FileWelcomeHandler fileWelcomeHandler;
 
+    private static List<RequestHandler> peerRequestConnections;
+    // private static List<FileHandler>;
+
+
     public static void main(String[] args) throws IOException {
         System.out.println("Hello");
 

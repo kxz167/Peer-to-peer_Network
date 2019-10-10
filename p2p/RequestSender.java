@@ -3,20 +3,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-class RequestSender extends Thread{
-
-    private Socket socket;
-    private DataInputStream dis;
-    private DataOutputStream dos;
+class RequestSender extends RequestHandler{
 
     public RequestSender(Socket socket, DataInputStream dis, DataOutputStream dos){
-        this.socket = socket;
-        this.dis = dis;
-        this.dos = dos;
-    }
-
-    public void terminate()throws IOException{
-        socket.close();
+        super(socket, dis, dos);
     }
 
     @Override
