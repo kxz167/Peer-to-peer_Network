@@ -6,12 +6,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.InputStreamReader;
 import java.util.Scanner;
-
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.List;
 import java.util.ArrayList;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.time.Duration;
 
 class p2p {
 
@@ -23,9 +25,10 @@ class p2p {
     private static RequestWelcomeHandler requestWelcomeHandler;
     private static FileWelcomeHandler fileWelcomeHandler;
 
-    private static List<RequestHandler> peerRequestConnections;
+    private static List<RequestHandler> peerRequestConnections = new ArrayList<>();
     // private static List<FileHandler>;
 
+    //Something to hold 
 
     public static void main(String[] args) throws IOException {
         System.out.println("Hello");
@@ -33,16 +36,41 @@ class p2p {
         initWelcomeSockets();
         startWelcomeSockets();
 
+        // TimerTask heartbeat = new TimerTask(){
+        
+        //     @Override
+        //     public void run() {
+        //         //Close the socket
+        //         System.out.println("Heartbeat");
+        //     }
+        // };
+        // Timer heartbeatTimer = new Timer();
+        // heartbeatTimer.schedule(heartbeat, 60*1000, 60*1000);
+
+        
+    
+
         // Get user input.
         BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
 
         while (running) {
+
             System.out.println("waiting");
-            parse(inputReader.readLine());
+
+            parseInput(inputReader.readLine());
         }
 
         inputReader.close();
     }
+
+    public static void floodPeers(String filename){
+        Query nextQuery = new Query(false, filename.hashCode(), filename);
+        for(RequestHandler connection : peerRequestConnections){
+            connection.sendQuery(nextQuery);
+        }
+        System.out.println("Query " + filename.hashCode() + " Sent");
+    }
+
 
     public static void initWelcomeSockets() throws FileNotFoundException {
         File config_neighbors = new File("config_peer.txt");
@@ -58,7 +86,6 @@ class p2p {
     public static void startWelcomeSockets() {
         requestWelcomeHandler.start();
         fileWelcomeHandler.start();
-
     }
 
     public static void initNeighborConnections() throws FileNotFoundException, UnknownHostException, IOException {
@@ -69,25 +96,47 @@ class p2p {
         Scanner neighborScanner = new Scanner(config_neighbors);
 
         while (neighborScanner.hasNext()) {
+            
             String ip = neighborScanner.next();
             int port = neighborScanner.nextInt();
 
-            neighborClientSockets.add(new Socket(ip, port));
+            System.out.println(ip);
+            System.out.println(port);
+
+            RequestHandler connection = new RequestSender(new Socket(ip, port));
+            connection.start();
+
+            peerRequestConnections.add(connection);
         }
 
         neighborScanner.close();
     }
 
-    public static void parse(String input) throws IOException{
-        switch (input) {
-        case "connect":
+    public static void parseInput(String input) throws IOException{
+        Scanner inputScanner = new Scanner(input);
+
+        switch (inputScanner.next()) {
+        case "Connect":
+            initNeighborConnections();
             System.out.println("Connecting");
+
             break;
-        case "exit":
+        case "Exit":
             System.out.println("Exiting");
             requestWelcomeHandler.terminate();
             fileWelcomeHandler.terminate();
+            for(RequestHandler connection : peerRequestConnections){
+                connection.terminate();
+            }
             running = false;
+            break;
+        case "Print":
+            System.out.println("Peer neighbors: " + peerRequestConnections);
+            System.out.println("Incoming connections: " + requestWelcomeHandler.getConnections());
+            break;
+        case "Get":
+            System.out.println("Will try and send out queries");
+            floodPeers(inputScanner.next());
             break;
         default:
             System.out.println("Unknown command");

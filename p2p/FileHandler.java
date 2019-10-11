@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.Timer;
 import java.io.IOException;
 
-abstract class RequestHandler extends Thread{
+abstract class FileHandler extends Thread{
     
     protected Socket socket;
     protected DataInputStream dis;
@@ -13,7 +13,7 @@ abstract class RequestHandler extends Thread{
 
     protected Timer heartbeatTimer = new Timer();
 
-    public RequestHandler (Socket socket) throws IOException{
+    public FileHandler (Socket socket){
         this.socket = socket;
         this.dis = new DataInputStream(socket.getInputStream());
         this.dos = new DataOutputStream(socket.getOutputStream());

@@ -39,12 +39,12 @@ class FileWelcomeHandler extends Thread {
             Socket clientSocket;
             try {
                 clientSocket = serverSocket.accept();
-                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 
-                FileSender newFileSender = new FileSender(clientSocket, dis, dos);
+                FileSender newFileSender = new FileSender(clientSocket);
+
                 newFileSender.start();
                 openConnections.add(newFileSender);
+                
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

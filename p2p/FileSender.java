@@ -3,17 +3,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-class FileSender extends Thread {
-    private Socket socket;
-    private DataInputStream dis;
-    private DataOutputStream dos;
+class FileSender extends FileHandler {
 
-
-    
-    public FileSender(Socket socket, DataInputStream dis, DataOutputStream dos){
-        this.socket = socket;
-        this.dis = dis;
-        this.dos = dos;
+    public FileSender(Socket socket)throws IOException{
+        super(socket);
     }
 
     public void terminate()throws IOException{
@@ -23,5 +16,10 @@ class FileSender extends Thread {
     @Override
     public void run(){
         //Push requested file into the data output stream.
+    }
+
+    @Override
+    public void sendQuery(Query nextQuery){
+
     }
 }

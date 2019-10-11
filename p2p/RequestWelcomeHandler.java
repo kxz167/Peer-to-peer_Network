@@ -38,10 +38,9 @@ class RequestWelcomeHandler extends Thread {
         while(open){
             try {
                 Socket clientSocket = serverSocket.accept();
-                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
                 
-                RequestReceiver newHandler = new RequestReceiver(clientSocket, dis, dos);
+                RequestReceiver newHandler = new RequestReceiver(clientSocket);
+                
                 newHandler.start();
                 openConnections.add(newHandler); 
             }
@@ -50,5 +49,9 @@ class RequestWelcomeHandler extends Thread {
                 e.printStackTrace();
             }
         }
+    }
+
+    public List<RequestReceiver> getConnections(){
+        return this.openConnections;
     }
 }
