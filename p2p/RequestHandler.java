@@ -4,7 +4,7 @@ import java.net.Socket;
 import java.util.Timer;
 import java.io.IOException;
 
-abstract class RequestHandler extends Thread{
+public abstract class RequestHandler extends Thread{
     
     protected Socket socket;
     protected DataInputStream dis;

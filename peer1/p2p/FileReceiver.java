@@ -3,10 +3,15 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class FileReceiver extends FileHandler {
+class FileReceiver extends Thread {
+    private Socket socket;
+    private DataInputStream dis;
+    private DataOutputStream dos;
 
-    public FileReceiver(Socket socket)throws IOException{
-        super(socket);
+    public FileReceiver(Socket socket, DataInputStream dis, DataOutputStream dos){
+        this.socket = socket;
+        this.dis = dis;
+        this.dos = dos;
     }
 
     public void terminate() throws IOException{
@@ -16,10 +21,5 @@ public class FileReceiver extends FileHandler {
     @Override
     public void run() {
         // Pull in a file from the data input stream.
-    }
-
-    @Override
-    public void sendQuery(Query nextQuery){
-
     }
 }

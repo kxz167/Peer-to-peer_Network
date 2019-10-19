@@ -6,10 +6,10 @@ import java.time.Duration;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class RequestSender extends RequestHandler {
+class RequestSender extends RequestHandler {
 
-    public RequestSender(Socket socket) throws IOException{
-        super(socket);
+    public RequestSender(Socket socket, DataInputStream dis, DataOutputStream dos) {
+        super(socket, dis, dos);
     }
 
     @Override
@@ -32,21 +32,12 @@ public class RequestSender extends RequestHandler {
             }
         };
 
-        System.out.println("Heartbeat Created");
-
-        Long heartbeatInterval = 10000L;
+        Timer heartbeatTimer = new Timer();
+        Long heartbeatInterval = Duration.ofSeconds(30).toMinutes();
         heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
 
         // Gets input requests
 
         //
-    }
-
-    @Override
-    public void sendQuery(Query nextQuery){
-        if(!p2p.hasRequest(nextQuery)){
-            p2p.addRequest(nextQuery);
-            System.out.println("I am sending query");
-        }
     }
 }

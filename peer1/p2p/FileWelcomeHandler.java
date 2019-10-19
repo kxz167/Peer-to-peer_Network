@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileWelcomeHandler extends Thread {
+class FileWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
@@ -39,12 +39,12 @@ public class FileWelcomeHandler extends Thread {
             Socket clientSocket;
             try {
                 clientSocket = serverSocket.accept();
+                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
 
-                FileSender newFileSender = new FileSender(clientSocket);
-
+                FileSender newFileSender = new FileSender(clientSocket, dis, dos);
                 newFileSender.start();
                 openConnections.add(newFileSender);
-                
             } catch (IOException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();

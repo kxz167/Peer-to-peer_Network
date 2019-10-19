@@ -6,22 +6,23 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FileWelcomeHandler extends Thread {
+class RequestWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
     // private List<Thread> clientSockets = new ArrayList<>();
 
-    private List<FileSender> openConnections = new ArrayList<>();
+    private List<RequestReceiver> openConnections = new ArrayList<>();
 
-    public FileWelcomeHandler(int port) {
+    public RequestWelcomeHandler(int port) {
         this.portNumber = port;
     }
 
     public void terminate ()throws IOException{
-        for (FileSender connection : openConnections){
+        for (RequestReceiver connection : openConnections){
             connection.terminate();
         }
+        
         open = false;
         serverSocket.close();
     }
@@ -34,22 +35,24 @@ public class FileWelcomeHandler extends Thread {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
-
-        while (open) {
-            Socket clientSocket;
+        while(open){
             try {
-                clientSocket = serverSocket.accept();
-
-                FileSender newFileSender = new FileSender(clientSocket);
-
-                newFileSender.start();
-                openConnections.add(newFileSender);
+                Socket clientSocket = serverSocket.accept();
+                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
                 
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
+                RequestReceiver newHandler = new RequestReceiver(clientSocket, dis, dos);
+                newHandler.start();
+                openConnections.add(newHandler); 
+            }
+            
+            catch(IOException e){
                 e.printStackTrace();
             }
-
         }
+    }
+
+    public List<RequestReceiver> getConnections(){
+        return this.openConnections;
     }
 }

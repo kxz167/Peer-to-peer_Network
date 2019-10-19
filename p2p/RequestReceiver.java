@@ -2,10 +2,11 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-class RequestReceiver extends RequestHandler {
+public class RequestReceiver extends RequestHandler {
 
     private long TIMEOUT = 60000L;
     private boolean open = true;
@@ -49,6 +50,8 @@ class RequestReceiver extends RequestHandler {
                 e.printStackTrace();
             }
 
+            // Scanner inputScanner = new Scanner(input);
+
             switch (input){
                 case "Heartbeat":
                     System.out.println("Heartbeat received");
@@ -64,7 +67,9 @@ class RequestReceiver extends RequestHandler {
                         e.printStackTrace();
                     }
                     break;
-
+                default:
+                    parseInput(input);
+                    break;
             }
         }
 
@@ -77,6 +82,43 @@ class RequestReceiver extends RequestHandler {
         heartbeat.cancel();
         heartbeatTimer = new Timer();
         heartbeatTimer.schedule(heartbeat, TIMEOUT);
+    }
+
+    public void parseInput(String input){
+        Scanner inputScanner = new Scanner(input);
+        inputScanner.useDelimiter(":");
+
+        String queryType = inputScanner.next();
+
+        inputScanner.useDelimiter(";");
+
+        if (queryType == "Q"){
+            String queryID = inputScanner.next();
+            String filename = inputScanner.next();
+            
+            Query receivedQuery = new Query(false, queryID, filename, socket.getInetAddress().getHostAddress());
+            
+            //Query received, send a response if have with my port and ip, 
+            
+            //else flood queries
+
+        }
+        else{
+            String queryID = inputScanner.next();
+            inputScanner.useDelimiter(":");
+
+            String peerIP = inputScanner.next();
+            inputScanner.useDelimiter(";");
+            
+            int peerPort = inputScanner.nextInt();
+            String filename = inputScanner.next();
+            
+            Query receivedQuery = new Query(true, queryID, peerIP, peerPort, filename, this.socket.getInetAddress().getHostAddress());
+
+            //Response received, is this response mine? 
+            
+            //if not, send to whoever sent the query before (IP, port attached);
+        }
     }
 
 }

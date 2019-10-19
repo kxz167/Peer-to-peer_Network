@@ -10,19 +10,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.Map;
-import java.util.TreeMap;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.time.Duration;
 
-public class p2p {
-
-    private static String myHost;
+class p2p {
 
     private static boolean running = true;
     private static List<Socket> neighborClientSockets = new ArrayList<>();
@@ -35,28 +28,25 @@ public class p2p {
     private static List<RequestHandler> peerRequestConnections = new ArrayList<>();
     // private static List<FileHandler>;
 
-    // Something to hold
-    private static Map<String, Query> requestQueries = new TreeMap<>();
-    // private static Map<String, Query> responseQueries = new TreeMap<>();
-    private static Map<String, Query> personalQueries = new TreeMap<>();
-
-    public static void main(String[] args) throws IOException, UnknownHostException {
+    public static void main(String[] args) throws IOException {
         System.out.println("Hello");
-        myHost = InetAddress.getLocalHost().getHostAddress();
-        System.out.println(myHost);
+
         initWelcomeSockets();
         startWelcomeSockets();
 
         // TimerTask heartbeat = new TimerTask(){
-
-        // @Override
-        // public void run() {
-        // //Close the socket
-        // System.out.println("Heartbeat");
-        // }
+        
+        //     @Override
+        //     public void run() {
+        //         //Close the socket
+        //         System.out.println("Heartbeat");
+        //     }
         // };
         // Timer heartbeatTimer = new Timer();
         // heartbeatTimer.schedule(heartbeat, 60*1000, 60*1000);
+
+        
+    
 
         // Get user input.
         BufferedReader inputReader = new BufferedReader(new InputStreamReader(System.in));
@@ -64,42 +54,11 @@ public class p2p {
         while (running) {
 
             System.out.println("waiting");
-
-            parseInput(inputReader.readLine());
+            parse(inputReader.readLine());
         }
 
         inputReader.close();
     }
-
-    public static void floodPeers(String filename) throws UnknownHostException {
-
-        Query nextQuery = new Query(false,
-                InetAddress.getByName(InetAddress.getLocalHost().toString()).getHostAddress() + filename, filename);
-
-        for (RequestHandler connection : peerRequestConnections) {
-            connection.sendQuery(nextQuery);
-        }
-
-        personalQueries.put(filename, nextQuery);
-
-        System.out.println("Query " + filename.hashCode() + " Sent");
-    }
-
-    public static void addRequest(Query request) {
-        requestQueries.put(request.getFilename(), request);
-    }
-
-    public static boolean hasRequest(Query request) {
-        return requestQueries.containsKey(request.getFilename());
-    }
-
-    // public static void addResponse(Query response){
-    // responseQueries.add(response);
-    // }
-
-    // public static boolean hasResponse(Query response){
-    // return responseQueries.contains(response);
-    // }
 
     public static void initWelcomeSockets() throws FileNotFoundException {
         File config_neighbors = new File("config_peer.txt");
@@ -115,6 +74,7 @@ public class p2p {
     public static void startWelcomeSockets() {
         requestWelcomeHandler.start();
         fileWelcomeHandler.start();
+
     }
 
     public static void initNeighborConnections() throws FileNotFoundException, UnknownHostException, IOException {
@@ -125,48 +85,41 @@ public class p2p {
         Scanner neighborScanner = new Scanner(config_neighbors);
 
         while (neighborScanner.hasNext()) {
-
+            
             String ip = neighborScanner.next();
             int port = neighborScanner.nextInt();
 
             System.out.println(ip);
             System.out.println(port);
 
-            RequestHandler connection = new RequestSender(new Socket(ip, port));
-            connection.start();
+            Socket newNeighbor = new Socket(ip, port);
 
-            peerRequestConnections.add(connection);
+            DataInputStream dis = new DataInputStream(newNeighbor.getInputStream());
+            DataOutputStream dos = new DataOutputStream(newNeighbor.getOutputStream());
+
+            peerRequestConnections.add(new RequestSender(newNeighbor, dis, dos));
         }
 
         neighborScanner.close();
     }
 
-    public static void parseInput(String input) throws IOException {
-        Scanner inputScanner = new Scanner(input);
-
-        switch (inputScanner.next()) {
-        case "Connect":
+    public static void parse(String input) throws IOException{
+        switch (input) {
+        case "connect":
             initNeighborConnections();
             System.out.println("Connecting");
 
             break;
-        case "Exit":
+        case "exit":
             System.out.println("Exiting");
             requestWelcomeHandler.terminate();
             fileWelcomeHandler.terminate();
-            for (RequestHandler connection : peerRequestConnections) {
-                connection.terminate();
-            }
             running = false;
             break;
-        case "Print":
+        case "print":
             System.out.println("Peer neighbors: " + peerRequestConnections);
             System.out.println("Incoming connections: " + requestWelcomeHandler.getConnections());
-            break;
-        case "Get":
-            System.out.println("Will try and send out queries");
-            floodPeers(inputScanner.next());
-            break;
+
         default:
             System.out.println("Unknown command");
         }
