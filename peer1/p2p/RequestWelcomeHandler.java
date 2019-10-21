@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-class RequestWelcomeHandler extends Thread {
+public class RequestWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
@@ -18,12 +18,16 @@ class RequestWelcomeHandler extends Thread {
         this.portNumber = port;
     }
 
-    public void terminate ()throws IOException{
-        for (RequestReceiver connection : openConnections){
+    public void terminate() throws IOException {
+        for (RequestReceiver connection : openConnections) {
             connection.terminate();
         }
-        
+
         open = false;
+
+        // new Socket(serverSocket.getInetAddress(),
+        // serverSocket.getLocalPort()).close();
+
         serverSocket.close();
     }
 
@@ -33,26 +37,25 @@ class RequestWelcomeHandler extends Thread {
             serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
         }
-        while(open){
+
+        while (open) {
             try {
                 Socket clientSocket = serverSocket.accept();
-                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
-                
-                RequestReceiver newHandler = new RequestReceiver(clientSocket, dis, dos);
-                newHandler.start();
-                openConnections.add(newHandler); 
+                if (open) {
+
+                    RequestReceiver newHandler = new RequestReceiver(clientSocket);
+
+                    newHandler.start();
+
+                    p2p.addIncoming(newHandler);
+
+                }
+
             }
-            
-            catch(IOException e){
-                e.printStackTrace();
+
+            catch (IOException e) {
             }
         }
-    }
-
-    public List<RequestReceiver> getConnections(){
-        return this.openConnections;
     }
 }

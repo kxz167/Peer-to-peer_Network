@@ -6,7 +6,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
-class FileWelcomeHandler extends Thread {
+public class FileWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
@@ -18,8 +18,8 @@ class FileWelcomeHandler extends Thread {
         this.portNumber = port;
     }
 
-    public void terminate ()throws IOException{
-        for (FileSender connection : openConnections){
+    public void terminate() throws IOException {
+        for (FileSender connection : openConnections) {
             connection.terminate();
         }
         open = false;
@@ -32,24 +32,34 @@ class FileWelcomeHandler extends Thread {
             serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            e.printStackTrace();
         }
 
         while (open) {
             Socket clientSocket;
             try {
-                clientSocket = serverSocket.accept();
-                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream());
+                if (open) {
+                    clientSocket = serverSocket.accept();
 
-                FileSender newFileSender = new FileSender(clientSocket, dis, dos);
-                newFileSender.start();
-                openConnections.add(newFileSender);
+                    System.out.println("Accepting connection");
+                    FileSender newFileSender = new FileSender(clientSocket);
+
+                    System.out.println("Start filesender");
+                    newFileSender.start();
+                    openConnections.add(newFileSender);
+                }
+
             } catch (IOException e) {
                 // TODO Auto-generated catch block
-                e.printStackTrace();
             }
 
         }
+    }
+
+    public String getIP(){
+        return serverSocket.getInetAddress().getHostAddress();
+    }
+
+    public int getPort(){
+        return serverSocket.getLocalPort();
     }
 }
