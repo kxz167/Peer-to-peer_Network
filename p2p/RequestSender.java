@@ -18,21 +18,18 @@ public class RequestSender extends RequestHandler {
 
         // Handles heartbeat sending
         TimerTask heartbeat = new TimerTask() {
-
             @Override
             public void run() {
                 try {
-
                     dos.writeUTF("Heartbeat");
+                    System.out.println("Sending heartbeat to: " + socket.getInetAddress().getHostAddress() + ":"
+                            + socket.getPort());
 
-                    System.out.println("Sending heartbeat to: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         };
-
-        // System.out.println("Heartbeat Created");
 
         Long heartbeatInterval = 10000L;
         heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
@@ -40,7 +37,7 @@ public class RequestSender extends RequestHandler {
         // Waits for incoming responses
         while (true) {
             String input = "";
-            // System.out.println("Waiting for response");
+
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
@@ -48,68 +45,57 @@ public class RequestSender extends RequestHandler {
             }
 
             try {
-                parseInput(input);
+                handleResponse(responseFrom(input));
             } catch (IOException e) {
 
             }
         }
     }
 
+    public Query responseFrom(String input) throws IOException {
 
-    public void parseInput(String input) throws IOException {
         Scanner inputScanner = new Scanner(input);
+
+        // Current request structure: R:(query ID);(peerIP:port);(filename)
         inputScanner.useDelimiter(":");
-
-        // System.out.println(input);
-
         String queryType = inputScanner.next();
-
-        // System.out.println("Query type is: " + queryType);
-
-        inputScanner.useDelimiter(";");
-
-        // System.out.println("Trying to receive Query");
-
         inputScanner.skip(":");
 
+        // Current request structure: (query ID);(peerIP:port);(filename)
+        inputScanner.useDelimiter(";");
         String queryID = inputScanner.next();
-        // System.out.println("ID is:" + queryID);
-
         inputScanner.skip(";");
 
-        if (queryType.equals("R")) {
-            inputScanner.useDelimiter(":");
-            System.out.println("Response received");
+        // Current request structure: (peerIP:port);(filename)
+        inputScanner.useDelimiter(":");
+        String peerIP = inputScanner.next();
+        inputScanner.skip(":");
 
-            String peerIP = inputScanner.next();
-            inputScanner.skip(":");
-            inputScanner.useDelimiter(";");
+        // Current request structure: port);(filename)
+        inputScanner.useDelimiter(";");
+        int peerPort = inputScanner.nextInt();
 
-            int peerPort = inputScanner.nextInt();
-            String filename = inputScanner.next();
+        String filename = inputScanner.next();
 
-            Query receivedQuery = new Query(true, queryID, peerIP, peerPort, filename,
-                    this.socket.getInetAddress().getHostAddress());
+        return new Query(true, queryID, peerIP, peerPort, filename,
+                this.socket.getInetAddress().getHostAddress());
+    }
 
-            // Response received, is this response responded already?
-            if (p2p.getResponseQueries().containsKey(queryID)) {
-                // Already responded to so drop, do nothing
+    public void handleResponse(Query receivedQuery) throws IOException{
+        String queryID = receivedQuery.getID();
+
+        if (!p2p.seenResponse(queryID)) {
+            // No, what next?
+            if (p2p.myResponse(queryID)) {
+                // Its for me, lets start downloading
+                p2p.retreiveFile(receivedQuery.getFilename(), receivedQuery.getPeerIP(), receivedQuery.getPeerPort());
             } else {
-                // if not, is it mine?
-                if (p2p.isMine(receivedQuery)) {
-                    // Its mine, lets start downloading
-                    System.out.println("This is my request");
-                    p2p.retreiveFile(receivedQuery.getFilename(), receivedQuery.getPeerIP(), receivedQuery.getPeerPort());
-                }
-                // if not, send to whoever sent the query
-                else {
-                    // Not mine, forward the response:
-                    System.out.println("This is not my request, forwarding");
-                    p2p.forwardResponseQuery(receivedQuery);
-                }
-                // Added to responded
-                p2p.getResponseQueries().put(queryID, receivedQuery);
+                // Not mine, forward the response:
+                p2p.forwardResponseQuery(receivedQuery);
             }
+            p2p.addResponseQuery(receivedQuery);
+        } else {
+            // Already responded to so drop response
         }
     }
 

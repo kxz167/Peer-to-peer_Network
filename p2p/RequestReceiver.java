@@ -10,20 +10,7 @@ public class RequestReceiver extends RequestHandler {
 
     private long TIMEOUT = 20000L;
     private boolean open = true;
-
-    private TimerTask heartbeat = new TimerTask() {
-
-        @Override
-        public void run() {
-            // Close the socket
-            try {
-                socket.close();
-            } catch (IOException e) {
-                // TODO: handle exception
-                e.printStackTrace();
-            }
-        }
-    };
+    private Timer heartbeatTimer = new Timer();
 
     public RequestReceiver(Socket socket) throws IOException {
         super(socket);
@@ -31,41 +18,39 @@ public class RequestReceiver extends RequestHandler {
 
     @Override
     public void run() {
-        // Handles heartbeat receiving. Close if none received in ____
-        heartbeatTimer.schedule(heartbeat, TIMEOUT);
+        // Heartbeat, set timer.
+        refreshTimer();
 
         while (open) {
             String input = "";
-            // System.out.println("Trying to read input");
+
+            // Get input from other side
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
                 e.printStackTrace();
             }
 
-            // Scanner inputScanner = new Scanner(input);
-
+            // Filter through results
             switch (input) {
             case "Heartbeat":
-                System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"  + socket.getPort());
+                System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"
+                        + socket.getPort());
                 refreshTimer();
                 break;
             case "Close":
-                // System.out.println("Peer was closed");
                 open = false;// Close the socket
                 try {
                     socket.close();
                 } catch (IOException e) {
-                    // TODO: handle exception
-                    e.printStackTrace();
+
                 }
                 break;
             default:
-                
+                // A request was received
                 try {
-                    parseInput(input);
+                    handleRequest(requestFrom(input));
                 } catch (IOException e) {
-
                 }
                 break;
             }
@@ -82,7 +67,8 @@ public class RequestReceiver extends RequestHandler {
         TimerTask newHeartbeat = new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Heartbeat timeout with: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + ", closing connection");
+                System.out.println("Heartbeat timeout with: " + socket.getInetAddress().getHostAddress() + ":"
+                        + socket.getPort() + ", closing connection");
                 // Close the socket
                 try {
                     socket.close();
@@ -90,85 +76,54 @@ public class RequestReceiver extends RequestHandler {
                 }
             }
         };
-
         heartbeatTimer = new Timer();
         heartbeatTimer.schedule(newHeartbeat, TIMEOUT);
     }
 
-    public void parseInput(String input) throws IOException {
+    public Query requestFrom(String input){
+
+        System.out.println("Request Query Received from: " + this.socket.getInetAddress().getHostAddress() + ":"
+                + this.socket.getPort());
+
         Scanner inputScanner = new Scanner(input);
+
+        // Current request structure: Q:(query ID);(short string)
         inputScanner.useDelimiter(":");
-
-        // System.out.println(input);
-
         String queryType = inputScanner.next();
-
-        // System.out.println("Query type is: " + queryType);
-
-        inputScanner.useDelimiter(";");
-
-        // System.out.println("Trying to receive Query");
-
         inputScanner.skip(":");
 
+        // Current request structure: (query ID);(short string)
+        inputScanner.useDelimiter(";");
         String queryID = inputScanner.next();
-        // System.out.println("ID is:" + queryID);
 
-        if (queryType.equals("Q")) {
-            System.out.println("Request Query Received from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
-            String filename = inputScanner.next();
+        // Current request structure: ;(short string)
+        String filename = inputScanner.next();
 
-            Query receivedQuery = new Query(false, queryID, filename, socket.getInetAddress().getHostAddress());
+        return new Query(false, queryID, filename, socket.getInetAddress().getHostAddress());
 
-            if (p2p.hasFile(filename) && !p2p.getPersonalResponses().containsKey(queryID)) {
-                // Return response
+    }
+
+    public void handleRequest(Query receivedQuery) throws IOException{
+        String filename = receivedQuery.getFilename();
+
+        // What is the next steps?
+        if (!p2p.seenRequest(receivedQuery.getID())) {
+            if (p2p.hasFile(filename)) {
                 System.out.println("I have file: " + filename + ", Sending response.");
+
                 receivedQuery.setPeerIP(p2p.getFileSocketIP());
                 receivedQuery.setPeerPort(p2p.getFileSocketPort());
+
+                p2p.addPersonalResponse(receivedQuery); // TODO Can move this?
+
                 sendQuery(receivedQuery);
-                p2p.getPersonalResponses().put(queryID, receivedQuery);
-            } else if (!p2p.getRequestQueries().containsKey(queryID)) {
-                // Not forwarded before, forward query
+            } else {
                 System.out.println("I don't have file: " + filename + ", Forwarding request.");
                 p2p.forwardRequestQuery(receivedQuery);
-            } else {
-                // Forwarded before, drop query
             }
-
-        } 
-        /*
-        else if (queryType.equals("R")) {
-            System.out.println("Responsefdfdfdfdf received");
-
-            String peerIP = inputScanner.next();
-            inputScanner.useDelimiter(";");
-
-            int peerPort = inputScanner.nextInt();
-            String filename = inputScanner.next();
-
-            Query receivedQuery = new Query(true, queryID, peerIP, peerPort, filename,
-                    this.socket.getInetAddress().getHostAddress());
-
-            // Response received, is this response responded already?
-            if (p2p.getResponseQueries().containsKey(queryID)) {
-                //Already responded to so drop, do nothing
-            } else {
-                // if not, is it mine?
-                if (p2p.isMine(receivedQuery)) {
-                    //Its mine, lets start downloading
-                    System.out.println("This is my request");
-                }
-                // if not, send to whoever sent the query
-                else {
-                    //Not mine, forward the response:
-                    System.out.println("This is not my request, forwarding");
-                    p2p.forwardResponseQuery(receivedQuery);
-                }
-                // Added to responded
-                p2p.getResponseQueries().put(queryID, receivedQuery);
-            }
+        } else {
+            // Request received before, drop.
         }
-        */
     }
 
     @Override
