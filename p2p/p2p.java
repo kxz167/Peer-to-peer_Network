@@ -48,9 +48,11 @@ public class p2p {
     private static Map<String, Query> responseQueries = new TreeMap<>();
 
     public static void main(String[] args) throws IOException, UnknownHostException {
-        System.out.println("Hello");
+
         myHost = InetAddress.getLocalHost().getHostAddress();
-        System.out.println(myHost);
+
+        System.out.println("Starting host: " + myHost);
+
         initWelcomeSockets();
         startWelcomeSockets();
 
@@ -72,13 +74,63 @@ public class p2p {
 
         while (running) {
 
-            System.out.println("waiting");
-
             parseInput(inputReader.readLine());
         }
 
         inputReader.close();
     }
+
+    // INITIATION:
+    public static void initWelcomeSockets() throws FileNotFoundException {
+        File config_neighbors = new File("config_peer.txt");
+
+        Scanner portScanner = new Scanner(config_neighbors);
+
+        requestWelcomeHandler = new RequestWelcomeHandler(portScanner.nextInt());
+        fileWelcomeHandler = new FileWelcomeHandler(portScanner.nextInt());
+
+        portScanner.close();
+    }
+
+    public static void startWelcomeSockets() {
+        requestWelcomeHandler.start();
+        fileWelcomeHandler.start();
+    }
+
+    public static void initNeighborConnections() throws FileNotFoundException, UnknownHostException, IOException {
+        // Create one TCP port for neighbor connections (from config_neighbors.txt)
+        // Read from config_neighbors.txt the ip address and port numbers
+        File config_neighbors = new File("config_neighbors.txt");
+
+        Scanner neighborScanner = new Scanner(config_neighbors);
+
+        while (neighborScanner.hasNext()) {
+            String ip = neighborScanner.next();
+            int port = neighborScanner.nextInt();
+
+            System.out.print("Attempting to connect to peer: " + ip + ":" + port + "... ");
+
+            try {
+                RequestHandler connection = new RequestSender(new Socket(ip, port));
+                System.out.println("Success");
+                peers.add(connection);
+            } catch (ConnectException e) {
+                // Can't connect
+                System.out.println("Failure");
+            }
+        }
+
+        neighborScanner.close();
+    }
+
+    public static void startNeighborConnections() {
+        for (RequestHandler handler : peers) {
+            handler.start();
+        }
+    }
+
+    //REQUEST QUERIES:
+
 
     public static void addIncoming(RequestReceiver incomingPeer) {
         incomingPeers.put(incomingPeer.getIP(), incomingPeer);
@@ -144,7 +196,7 @@ public class p2p {
         for (RequestHandler connection : peers) {
             connection.sendQuery(nextQuery);
         }
-        System.out.println("Sent query: " + nextQuery.getID());
+        System.out.println("Sending query: " + nextQuery.getID());
 
     }
 
@@ -169,14 +221,13 @@ public class p2p {
     // }
 
     public static void retreiveFile(String filename, String ip, int port) {
-        System.out.println("I will now try and retreive the file");
+        // System.out.println("I will now try and retreive the file");
         try {
             System.out.println(ip);
             Socket fileSocket = new Socket(ip, port);
 
             FileReceiver fileReceiver = new FileReceiver(fileSocket, filename);
             fileReceiver.start();
-
 
         } catch (UnknownHostException e) {
             System.out.println("unknown Host");
@@ -186,65 +237,17 @@ public class p2p {
 
     }
 
-    public static void initWelcomeSockets() throws FileNotFoundException {
-        File config_neighbors = new File("config_peer.txt");
-
-        Scanner portScanner = new Scanner(config_neighbors);
-
-        requestWelcomeHandler = new RequestWelcomeHandler(portScanner.nextInt());
-        fileWelcomeHandler = new FileWelcomeHandler(portScanner.nextInt());
-
-        portScanner.close();
-    }
-
-    public static void startWelcomeSockets() {
-        requestWelcomeHandler.start();
-        fileWelcomeHandler.start();
-    }
-
-    public static void initNeighborConnections() throws FileNotFoundException, UnknownHostException, IOException {
-        // Create one TCP port for neighbor connections (from config_neighbors.txt)
-        // Read from config_neighbors.txt the ip address and port numbers
-        File config_neighbors = new File("config_neighbors.txt");
-
-        Scanner neighborScanner = new Scanner(config_neighbors);
-
-        while (neighborScanner.hasNext()) {
-
-            String ip = neighborScanner.next();
-            int port = neighborScanner.nextInt();
-
-            System.out.println(ip);
-            System.out.println(port);
-            try {
-                RequestHandler connection = new RequestSender(new Socket(ip, port));
-                peers.add(connection);
-            } catch (ConnectException e) {
-                // Can't connect
-                System.out.println("Peer refused connection");
-            }
-        }
-
-        neighborScanner.close();
-    }
-
-    public static void startNeighborConnections() {
-        for (RequestHandler handler : peers) {
-            handler.start();
-        }
-    }
-
     public static void parseInput(String input) throws IOException {
         Scanner inputScanner = new Scanner(input);
 
         switch (inputScanner.next()) {
         case "Connect":
-            System.out.println("Connecting");
+            // System.out.println("Connecting");
             initNeighborConnections();
             startNeighborConnections();
             break;
         case "Exit":
-            System.out.println("Exiting");
+            // System.out.println("Exiting");
             requestWelcomeHandler.terminate();
             fileWelcomeHandler.terminate();
             for (RequestHandler connection : peers) {
@@ -253,10 +256,10 @@ public class p2p {
             running = false;
             break;
         case "Print":
-            System.out.println("Peer neighbors: " + peers);
+            // System.out.println("Peer neighbors: " + peers);
             break;
         case "Get":
-            System.out.println("Will try and send out queries");
+            // System.out.println("Will try and send out queries");
             createQuery(inputScanner.next());
             break;
         default:

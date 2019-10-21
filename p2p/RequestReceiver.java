@@ -36,7 +36,7 @@ public class RequestReceiver extends RequestHandler {
 
         while (open) {
             String input = "";
-            System.out.println("Trying to read input");
+            // System.out.println("Trying to read input");
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
@@ -47,11 +47,11 @@ public class RequestReceiver extends RequestHandler {
 
             switch (input) {
             case "Heartbeat":
-                System.out.println("Heartbeat received");
+                System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"  + socket.getPort());
                 refreshTimer();
                 break;
             case "Close":
-                System.out.println("Peer was closed");
+                // System.out.println("Peer was closed");
                 open = false;// Close the socket
                 try {
                     socket.close();
@@ -61,7 +61,7 @@ public class RequestReceiver extends RequestHandler {
                 }
                 break;
             default:
-                System.out.println("Other input received");
+                
                 try {
                     parseInput(input);
                 } catch (IOException e) {
@@ -82,7 +82,7 @@ public class RequestReceiver extends RequestHandler {
         TimerTask newHeartbeat = new TimerTask() {
             @Override
             public void run() {
-                System.out.println("Heartbeat missed, closing socket");
+                System.out.println("Heartbeat timeout with: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort() + ", closing connection");
                 // Close the socket
                 try {
                     socket.close();
@@ -99,43 +99,46 @@ public class RequestReceiver extends RequestHandler {
         Scanner inputScanner = new Scanner(input);
         inputScanner.useDelimiter(":");
 
-        System.out.println(input);
+        // System.out.println(input);
 
         String queryType = inputScanner.next();
 
-        System.out.println("Query type is: " + queryType);
+        // System.out.println("Query type is: " + queryType);
 
         inputScanner.useDelimiter(";");
 
-        System.out.println("Trying to receive Query");
+        // System.out.println("Trying to receive Query");
 
         inputScanner.skip(":");
 
         String queryID = inputScanner.next();
-        System.out.println("ID is:" + queryID);
+        // System.out.println("ID is:" + queryID);
 
         if (queryType.equals("Q")) {
-            System.out.println("Request Received");
+            System.out.println("Request Query Received from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
             String filename = inputScanner.next();
 
             Query receivedQuery = new Query(false, queryID, filename, socket.getInetAddress().getHostAddress());
 
             if (p2p.hasFile(filename) && !p2p.getPersonalResponses().containsKey(queryID)) {
                 // Return response
-                System.out.println("I have file: " + filename);
+                System.out.println("I have file: " + filename + ", Sending response.");
                 receivedQuery.setPeerIP(p2p.getFileSocketIP());
                 receivedQuery.setPeerPort(p2p.getFileSocketPort());
                 sendQuery(receivedQuery);
                 p2p.getPersonalResponses().put(queryID, receivedQuery);
             } else if (!p2p.getRequestQueries().containsKey(queryID)) {
                 // Not forwarded before, forward query
+                System.out.println("I don't have file: " + filename + ", Forwarding request.");
                 p2p.forwardRequestQuery(receivedQuery);
             } else {
                 // Forwarded before, drop query
             }
 
-        } else if (queryType.equals("R")) {
-            System.out.println("Response received");
+        } 
+        /*
+        else if (queryType.equals("R")) {
+            System.out.println("Responsefdfdfdfdf received");
 
             String peerIP = inputScanner.next();
             inputScanner.useDelimiter(";");
@@ -165,11 +168,12 @@ public class RequestReceiver extends RequestHandler {
                 p2p.getResponseQueries().put(queryID, receivedQuery);
             }
         }
+        */
     }
 
     @Override
     public void sendQuery(Query nextQuery) throws IOException {
-        System.out.println(this + ": I am sending response");
+        // System.out.println(this + ": I am sending response");
         this.dos.writeUTF("R:" + nextQuery.getID() + ";" + nextQuery.getPeerIP() + ":" + nextQuery.getPeerPort() + ";"
                 + nextQuery.getFilename());
     }

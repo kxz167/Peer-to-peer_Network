@@ -22,12 +22,12 @@ public class FileReceiver extends FileHandler {
     @Override
     public void run() {
         try {
-            System.out.println("Trying to receive the file");
+            System.out.println("Requesting file from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
             OutputStream fileOutput = new FileOutputStream("obtained\\" + filename);
             BufferedOutputStream bos = new BufferedOutputStream(fileOutput);
 
 
-            System.out.println("Send the file name");
+            // System.out.println("Send the file name");
             // Pull in a file from the data input stream.
             dos.writeUTF(filename);
 
@@ -40,8 +40,11 @@ public class FileReceiver extends FileHandler {
 
             bos.flush();
 
+            bos.close();
+
             this.terminate();
-            System.out.println("Completed receiving file");
+
+            System.out.println("Completed receiving file from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
         } catch (IOException e) {
 
         }

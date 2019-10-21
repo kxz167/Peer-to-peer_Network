@@ -25,14 +25,14 @@ public class RequestSender extends RequestHandler {
 
                     dos.writeUTF("Heartbeat");
 
-                    System.out.println("Heartbeat sent");
+                    System.out.println("Sending heartbeat to: " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             }
         };
 
-        System.out.println("Heartbeat Created");
+        // System.out.println("Heartbeat Created");
 
         Long heartbeatInterval = 10000L;
         heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
@@ -40,7 +40,7 @@ public class RequestSender extends RequestHandler {
         // Waits for incoming responses
         while (true) {
             String input = "";
-            System.out.println("Waiting for response");
+            // System.out.println("Waiting for response");
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
@@ -60,20 +60,20 @@ public class RequestSender extends RequestHandler {
         Scanner inputScanner = new Scanner(input);
         inputScanner.useDelimiter(":");
 
-        System.out.println(input);
+        // System.out.println(input);
 
         String queryType = inputScanner.next();
 
-        System.out.println("Query type is: " + queryType);
+        // System.out.println("Query type is: " + queryType);
 
         inputScanner.useDelimiter(";");
 
-        System.out.println("Trying to receive Query");
+        // System.out.println("Trying to receive Query");
 
         inputScanner.skip(":");
 
         String queryID = inputScanner.next();
-        System.out.println("ID is:" + queryID);
+        // System.out.println("ID is:" + queryID);
 
         inputScanner.skip(";");
 
@@ -115,7 +115,7 @@ public class RequestSender extends RequestHandler {
 
     @Override
     public void sendQuery(Query nextQuery) throws IOException {
-        System.out.println(this + ": I am sending query");
+        // System.out.println("I am sending query");
         this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
     }
 }

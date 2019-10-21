@@ -40,10 +40,10 @@ public class FileWelcomeHandler extends Thread {
                 if (open) {
                     clientSocket = serverSocket.accept();
 
-                    System.out.println("Accepting connection");
+                    // System.out.println("Accepting connection");
                     FileSender newFileSender = new FileSender(clientSocket);
 
-                    System.out.println("Start filesender");
+                    // System.out.println("Start filesender");
                     newFileSender.start();
                     openConnections.add(newFileSender);
                 }

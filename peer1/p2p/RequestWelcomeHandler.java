@@ -25,9 +25,6 @@ public class RequestWelcomeHandler extends Thread {
 
         open = false;
 
-        // new Socket(serverSocket.getInetAddress(),
-        // serverSocket.getLocalPort()).close();
-
         serverSocket.close();
     }
 
@@ -43,9 +40,11 @@ public class RequestWelcomeHandler extends Thread {
             try {
                 Socket clientSocket = serverSocket.accept();
                 if (open) {
-
                     RequestReceiver newHandler = new RequestReceiver(clientSocket);
 
+                    
+                    System.out.println("Accepting connection from : " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
+                    
                     newHandler.start();
 
                     p2p.addIncoming(newHandler);

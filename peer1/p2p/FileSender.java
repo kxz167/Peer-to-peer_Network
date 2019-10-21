@@ -21,7 +21,8 @@ public class FileSender extends FileHandler {
     public void run() {
         // Push requested file into the data output stream.
         try {
-            File file = new File("shared\\" + dis.readUTF());
+            String filename = dis.readUTF();
+            File file = new File("shared\\" + filename);
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
 
@@ -29,7 +30,7 @@ public class FileSender extends FileHandler {
             long fileLength = file.length();
             long currentPos = 0;
 
-            System.out.println("Commence file sending");
+            System.out.println(filename + " requested by: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
 
             while (currentPos != fileLength) {
                 int pushSize = 1024;
@@ -45,12 +46,13 @@ public class FileSender extends FileHandler {
                 dos.write(buffer);
             }
 
-            System.out.println("Completed sending file");
+            System.out.println("Completed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
 
             dos.flush();
+            bis.close();
             this.terminate();
         } catch (IOException e) {
-            System.out.println("Ioexception");
+            System.out.println("Failed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
         }
     }
 
