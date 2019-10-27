@@ -26,8 +26,6 @@ public class FileReceiver extends FileHandler {
             OutputStream fileOutput = new FileOutputStream("obtained\\" + filename);
             BufferedOutputStream bos = new BufferedOutputStream(fileOutput);
 
-
-            // System.out.println("Send the file name");
             // Pull in a file from the data input stream.
             dos.writeUTF(filename);
 
@@ -39,7 +37,6 @@ public class FileReceiver extends FileHandler {
             }
 
             bos.flush();
-
             bos.close();
 
             this.terminate();
@@ -48,13 +45,6 @@ public class FileReceiver extends FileHandler {
         } catch (IOException e) {
 
         }
-
-    }
-
-    // public static void
-
-    @Override
-    public void sendQuery(Query nextQuery) {
 
     }
 }

@@ -35,7 +35,7 @@ public class RequestSender extends RequestHandler {
         heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
 
         // Waits for incoming responses
-        while (true) {
+        while (open) {
             String input = "";
 
             try {
@@ -101,7 +101,6 @@ public class RequestSender extends RequestHandler {
 
     @Override
     public void sendQuery(Query nextQuery) throws IOException {
-        // System.out.println("I am sending query");
         this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
     }
 }

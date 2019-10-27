@@ -9,8 +9,8 @@ import java.util.TimerTask;
 public class RequestReceiver extends RequestHandler {
 
     private long TIMEOUT = 20000L;
-    private boolean open = true;
     private Timer heartbeatTimer = new Timer();
+    private TimerTask heartbeat = null;
 
     public RequestReceiver(Socket socket) throws IOException {
         super(socket);
@@ -20,7 +20,6 @@ public class RequestReceiver extends RequestHandler {
     public void run() {
         // Heartbeat, set timer.
         refreshTimer();
-
         while (open) {
             String input = "";
 
@@ -62,9 +61,12 @@ public class RequestReceiver extends RequestHandler {
     }
 
     public void refreshTimer() {
-        heartbeatTimer.cancel();
+        if(heartbeat != null)
+            heartbeat.cancel();
 
-        TimerTask newHeartbeat = new TimerTask() {
+        heartbeatTimer.purge();
+
+        heartbeat = new TimerTask() {
             @Override
             public void run() {
                 System.out.println("Heartbeat timeout with: " + socket.getInetAddress().getHostAddress() + ":"
@@ -76,8 +78,8 @@ public class RequestReceiver extends RequestHandler {
                 }
             }
         };
-        heartbeatTimer = new Timer();
-        heartbeatTimer.schedule(newHeartbeat, TIMEOUT);
+
+        heartbeatTimer.schedule(heartbeat, TIMEOUT);
     }
 
     public Query requestFrom(String input){
@@ -128,7 +130,6 @@ public class RequestReceiver extends RequestHandler {
 
     @Override
     public void sendQuery(Query nextQuery) throws IOException {
-        // System.out.println(this + ": I am sending response");
         this.dos.writeUTF("R:" + nextQuery.getID() + ";" + nextQuery.getPeerIP() + ":" + nextQuery.getPeerPort() + ";"
                 + nextQuery.getFilename());
     }

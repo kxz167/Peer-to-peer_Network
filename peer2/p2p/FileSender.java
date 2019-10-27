@@ -55,9 +55,4 @@ public class FileSender extends FileHandler {
             System.out.println("Failed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
         }
     }
-
-    @Override
-    public void sendQuery(Query nextQuery) {
-
-    }
 }

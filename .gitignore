@@ -2,6 +2,18 @@
 
 .vscode
 
+obtained
+
+shared
+
+build
+
+build.xml
+
 config_neighbors.txt
 config_peer.txt
 config_sharing.txt
+
+peer1
+
+peer2

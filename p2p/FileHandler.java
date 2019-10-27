@@ -24,6 +24,4 @@ public abstract class FileHandler extends Thread{
         dos.writeUTF("Close");
         socket.close();
     }
-
-    public abstract void sendQuery(Query nextQuery);
 }

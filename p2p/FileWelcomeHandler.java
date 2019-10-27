@@ -10,7 +10,6 @@ public class FileWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
-    // private List<Thread> clientSockets = new ArrayList<>();
 
     private List<FileSender> openConnections = new ArrayList<>();
 

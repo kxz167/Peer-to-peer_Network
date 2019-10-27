@@ -114,7 +114,7 @@ $ANT_HOME/lib must contain (see Ant-JUnit and JaCoCo installation guides):
 
     <!-- Run the p2p client -->
     <target name="run">
-        <java classname= "p2p">
+        <java classname= "p2p" dir= "${src.dir}" fork = "yes">
             <arg value ="-h"/>
             <classpath>
                 <pathelement path="${build.dir}"/>

@@ -9,7 +9,7 @@ public abstract class RequestHandler extends Thread{
     protected Socket socket;
     protected DataInputStream dis;
     protected DataOutputStream dos;
-    protected boolean open;
+    protected boolean open = true;
 
     protected Timer heartbeatTimer = new Timer();
 
@@ -20,6 +20,7 @@ public abstract class RequestHandler extends Thread{
     }
 
     public void terminate()throws IOException{
+        open = false;
         heartbeatTimer.cancel();
         dos.writeUTF("Close");
         socket.close();
