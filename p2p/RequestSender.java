@@ -42,12 +42,14 @@ public class RequestSender extends RequestHandler {
             } catch (IOException e) {
                 // e.printStackTrace();
             }
-
-            try {
-                handleResponse(responseFrom(input));
-            } catch (IOException e) {
-
+            if(open){
+                try {
+                    handleResponse(responseFrom(input));
+                } catch (IOException e) {
+    
+                }
             }
+            
         }
     }
 
