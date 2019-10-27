@@ -21,19 +21,24 @@ public abstract class RequestHandler extends Thread{
         this.dos = new DataOutputStream(socket.getOutputStream());
     }
 
-    public void terminate()throws IOException{
-        System.out.println("Termination of yes");
-        open = false;
-        
-        heartbeat.cancel();
-        heartbeatTimer.cancel();
+    public void terminate(){
+        try{
+            System.out.println("Termination of yes");
+            open = false;
+            
+            heartbeat.cancel();
+            heartbeatTimer.cancel();
+    
+            dos.writeUTF("Close");
+    
+            dis.close();
+            dos.close();
+    
+            socket.close();
+        }
+        catch(IOException e){
 
-        dos.writeUTF("Close");
-
-        dis.close();
-        dos.close();
-
-        socket.close();
+        }
     }
 
     public String getIP(){
