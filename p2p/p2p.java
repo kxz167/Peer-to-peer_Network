@@ -277,11 +277,11 @@ public class p2p {
                 connection.terminate();
             }
 
-            incomingPeers.forEach((ip, handler)->{ handler.terminate();});
+            // incomingPeers.forEach((ip, handler)->{ handler.terminate();});
 
-            // for (Map.entry<String, RequestHandler> entry : incomingPeers.entrySet()){
-                
-            // }
+            for (Map.entry<String, RequestHandler> entry : incomingPeers.entrySet()){
+                entry.getValue().terminate();
+            }
 
             running = false;
             break;
