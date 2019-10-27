@@ -132,4 +132,9 @@ public class RequestReceiver extends RequestHandler {
                 + nextQuery.getFilename());
     }
 
+    @Override
+    public void erase(){
+        p2p.removeRequestReceiver(this);
+    }
+
 }

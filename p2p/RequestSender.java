@@ -25,7 +25,7 @@ public class RequestSender extends RequestHandler {
                             + socket.getPort());
 
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    // e.printStackTrace();
                 }
             }
         };
@@ -40,7 +40,7 @@ public class RequestSender extends RequestHandler {
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
 
             try {
@@ -101,5 +101,10 @@ public class RequestSender extends RequestHandler {
     @Override
     public void sendQuery(Query nextQuery) throws IOException {
         this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
+    }
+
+    @Override
+    public void erase(){
+        p2p.removeRequestSender(this);
     }
 }

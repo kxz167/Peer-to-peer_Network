@@ -23,7 +23,7 @@ public abstract class RequestHandler extends Thread{
 
     public void terminate(){
         try{
-            System.out.println("Termination of yes");
+            // System.out.println("Termination of yes");
             open = false;
             
             heartbeat.cancel();
@@ -35,6 +35,8 @@ public abstract class RequestHandler extends Thread{
             dos.close();
     
             socket.close();
+
+            erase();
         }
         catch(IOException e){
 
@@ -44,6 +46,8 @@ public abstract class RequestHandler extends Thread{
     public String getIP(){
         return socket.getInetAddress().getHostAddress();
     }
+
+    public abstract void erase();
 
     public abstract void sendQuery(Query nextQuery) throws IOException;
 }

@@ -222,6 +222,15 @@ public class p2p {
         return requestQueries.containsKey(request.getFilename());
     }
 
+    //CLEANUP
+
+    public static void removeRequestReceiver(RequestHandler deadThread){
+        incomingPeers.remove(deadThread);
+    }
+
+    public static void removeRequestSender(RequestHandler deadThread){
+        peers.remove(deadThread);
+    }
 
     // FILE RETREIVAL
     public static void retreiveFile(String filename, String ip, int port) {
