@@ -36,7 +36,7 @@ public abstract class RequestHandler extends Thread{
     
             socket.close();
 
-            erase();
+            // erase();
         }
         catch(IOException e){
 
