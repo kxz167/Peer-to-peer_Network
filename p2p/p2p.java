@@ -47,7 +47,7 @@ public class p2p {
     public static void main(String[] args) throws IOException, UnknownHostException {
 
         // Set frequently accessed host name
-        myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName()).getHostAddress();
+        myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName() + ".case.edu").getHostAddress();
 
         System.out.println("Starting host: " + myHost);
 

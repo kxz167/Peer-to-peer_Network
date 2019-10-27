@@ -8,7 +8,7 @@ import java.util.TimerTask;
 
 public class RequestReceiver extends RequestHandler {
 
-    private long TIMEOUT = 20000L;
+    private long TIMEOUT = 60000L;
     private Timer heartbeatTimer = new Timer();
     private TimerTask heartbeat = null;
 

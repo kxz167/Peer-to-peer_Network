@@ -30,7 +30,7 @@ public class RequestSender extends RequestHandler {
             }
         };
 
-        Long heartbeatInterval = 10000L;
+        Long heartbeatInterval = 30000L;
         heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
 
         // Waits for incoming responses
