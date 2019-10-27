@@ -23,7 +23,7 @@ public class FileReceiver extends FileHandler {
     public void run() {
         try {
             System.out.println("Requesting file from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
-            OutputStream fileOutput = new FileOutputStream("obtained\\" + filename);
+            OutputStream fileOutput = new FileOutputStream("obtained/" + filename);
             BufferedOutputStream bos = new BufferedOutputStream(fileOutput);
 
             // Pull in a file from the data input stream.

@@ -22,7 +22,7 @@ public class FileSender extends FileHandler {
         // Push requested file into the data output stream.
         try {
             String filename = dis.readUTF();
-            File file = new File("shared\\" + filename);
+            File file = new File("shared/" + filename);
             FileInputStream fis = new FileInputStream(file);
             BufferedInputStream bis = new BufferedInputStream(fis);
 
