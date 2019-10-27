@@ -276,6 +276,13 @@ public class p2p {
             for (RequestHandler connection : peers) {
                 connection.terminate();
             }
+
+            incomingPeers.forEach(RequestHandler::terminate);
+
+            // for (Map.entry<String, RequestHandler> entry : incomingPeers.entrySet()){
+                
+            // }
+
             running = false;
             break;
         case "get":

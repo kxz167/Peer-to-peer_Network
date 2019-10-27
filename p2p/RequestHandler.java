@@ -22,6 +22,7 @@ public abstract class RequestHandler extends Thread{
     }
 
     public void terminate()throws IOException{
+        System.out.println("Termination of yes");
         open = false;
         
         heartbeat.cancel();
