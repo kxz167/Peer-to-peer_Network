@@ -16,7 +16,7 @@ public class RequestSender extends RequestHandler {
     public void run() {
 
         // Handles heartbeat sending
-        TimerTask heartbeat = new TimerTask() {
+        heartbeat = new TimerTask() {
             @Override
             public void run() {
                 try {

@@ -2,6 +2,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.util.Timer;
+import java.util.TimerTask;
 import java.io.IOException;
 
 public abstract class RequestHandler extends Thread{
@@ -12,6 +13,7 @@ public abstract class RequestHandler extends Thread{
     protected boolean open = true;
 
     protected Timer heartbeatTimer = new Timer();
+    protected TimerTask heartbeat = null;
 
     public RequestHandler (Socket socket) throws IOException{
         this.socket = socket;
@@ -21,8 +23,15 @@ public abstract class RequestHandler extends Thread{
 
     public void terminate()throws IOException{
         open = false;
+        
+        heartbeat.cancel();
         heartbeatTimer.cancel();
+
         dos.writeUTF("Close");
+
+        dis.close();
+        dos.close();
+
         socket.close();
     }
 

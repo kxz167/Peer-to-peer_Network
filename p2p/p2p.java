@@ -251,6 +251,26 @@ public class p2p {
             startNeighborConnections();
             break;
         case "exit":
+
+            //Stop the requestWelcomeHandler
+                //Close the server socket
+                //open = false so the loop will exit
+            //Stop the fileWelcomeHandler
+                //Close the socket
+                //open=false so that the loop will exit
+            //Stop each of the incoming connections
+                //Stop the timeout timer and close timer
+                //Send close message into socket
+                //Close the DIS
+                //Close the DOS
+                //Close the socket
+            //Stop each of the outgoing connections
+                //Stop the heartbeat timer
+                //Send close into the socket
+                //Set open=false
+                //Close the DIS
+                //Close the DOS
+                //Close the socket
             requestWelcomeHandler.terminate();
             fileWelcomeHandler.terminate();
             for (RequestHandler connection : peers) {
