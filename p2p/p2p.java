@@ -162,7 +162,7 @@ public class p2p {
     }
 
     public static String getFileSocketIP() {
-        return fileWelcomeHandler.getIP();
+        return myHost;
     }
 
     public static int getFileSocketPort() {
