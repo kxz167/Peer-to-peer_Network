@@ -279,7 +279,7 @@ public class p2p {
 
             // incomingPeers.forEach((ip, handler)->{ handler.terminate();});
 
-            for (Map.entry<String, RequestHandler> entry : incomingPeers.entrySet()){
+            for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()){
                 entry.getValue().terminate();
             }
 
