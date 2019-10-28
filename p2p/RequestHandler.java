@@ -15,10 +15,15 @@ public abstract class RequestHandler extends Thread{
     protected Timer heartbeatTimer = new Timer();
     protected TimerTask heartbeat = null;
 
-    public RequestHandler (Socket socket) throws IOException{
-        this.socket = socket;
-        this.dis = new DataInputStream(socket.getInputStream());
-        this.dos = new DataOutputStream(socket.getOutputStream());
+    public RequestHandler (Socket socket){
+        try{
+            this.socket = socket;
+            this.dis = new DataInputStream(socket.getInputStream());
+            this.dos = new DataOutputStream(socket.getOutputStream());
+        }
+        catch(IOException e){
+            System.out.println("Socket closed");
+        }
     }
 
     public void terminate(){
@@ -49,5 +54,5 @@ public abstract class RequestHandler extends Thread{
 
     public abstract void erase();
 
-    public abstract void sendQuery(Query nextQuery) throws IOException;
+    public abstract void sendQuery(Query nextQuery);
 }

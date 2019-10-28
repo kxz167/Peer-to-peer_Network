@@ -95,22 +95,27 @@ public class RequestSender extends RequestHandler {
 
         if (!p2p.seenResponse(queryID)) {
             // No, what next?
-            if (p2p.myResponse(queryID)) {
+            if (p2p.responseForMe(queryID)) {
                 // Its for me, lets start downloading
                 p2p.retreiveFile(receivedQuery.getFilename(), receivedQuery.getPeerIP(), receivedQuery.getPeerPort());
             } else {
                 // Not mine, forward the response:
                 p2p.forwardResponseQuery(receivedQuery);
             }
-            p2p.addResponseQuery(receivedQuery);
+            p2p.addResponse(receivedQuery);
         } else {
             // Already responded to so drop response
         }
     }
 
     @Override
-    public void sendQuery(Query nextQuery) throws IOException {
-        this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
+    public void sendQuery(Query nextQuery){
+        try{
+            this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
+        }
+        catch (IOException e){
+            System.out.println("Error while sending query");
+        }
     }
 
     @Override

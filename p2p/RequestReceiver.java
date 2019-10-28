@@ -105,10 +105,10 @@ public class RequestReceiver extends RequestHandler {
             if (p2p.hasFile(filename)) {
                 System.out.println("I have file: " + filename + ", Sending response.");
 
-                receivedQuery.setPeerIP(p2p.getFileSocketIP());
+                receivedQuery.setPeerIP(p2p.getIP());
                 receivedQuery.setPeerPort(p2p.getFileSocketPort());
 
-                p2p.addPersonalResponse(receivedQuery); // TODO Can move this?
+                p2p.addResponse(receivedQuery); // TODO Can move this?
 
                 sendQuery(receivedQuery);
             } else {
@@ -121,9 +121,14 @@ public class RequestReceiver extends RequestHandler {
     }
 
     @Override
-    public void sendQuery(Query nextQuery) throws IOException {
+    public void sendQuery(Query nextQuery){
+        try{
         this.dos.writeUTF("R:" + nextQuery.getID() + ";" + nextQuery.getPeerIP() + ":" + nextQuery.getPeerPort() + ";"
                 + nextQuery.getFilename());
+        }
+        catch(IOException e){
+            System.out.println("Error sending out response query");
+        }
     }
 
     @Override

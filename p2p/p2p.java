@@ -28,9 +28,6 @@ public class p2p {
     private static List<String> myFiles = new ArrayList<>();
 
     private static boolean running = true;
-    // private static List<Socket> neighborClientSockets = new ArrayList<>();
-    // private static List<Socket> neighborServerSockets = new ArrayList<>();
-    // private static Thread welcomeHandler;
 
     private static RequestWelcomeHandler requestWelcomeHandler;
     private static FileWelcomeHandler fileWelcomeHandler;
@@ -42,7 +39,7 @@ public class p2p {
     private static Map<String, Query> requestQueries = new TreeMap<>();
     private static Map<String, Query> personalQueries = new TreeMap<>();
     private static Map<String, Query> responseQueries = new TreeMap<>();
-    private static Map<String, Query> personalResponses = new TreeMap<>();
+    // private static Map<String, Query> personalResponses = new TreeMap<>();
 
     public static void main(String[] args) throws IOException, UnknownHostException {
 
@@ -66,16 +63,63 @@ public class p2p {
         inputReader.close();
     }
 
+    // P2P FUNCTIONALITY
+    public static void parseInput(String input) throws IOException {
+        Scanner inputScanner = new Scanner(input);
+        String command = inputScanner.next();
+        command = command.toLowerCase();
+
+        switch (command) {
+        case "connect":
+            initNeighborConnections();
+            startNeighborConnections();
+            break;
+        case "exit":
+            requestWelcomeHandler.terminate();
+            fileWelcomeHandler.terminate();
+
+            // Close all peers
+            for (RequestHandler connection : peers) {
+                connection.terminate();
+            }
+
+            // Close all incoming peers
+            for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()) {
+                entry.getValue().terminate();
+            }
+
+            running = false;
+            break;
+        case "leave":
+            // Close all the peers and remove them from the list
+            for (int i = 0; i < peers.size(); i++) {
+                RequestHandler target = peers.get(i);
+                target.terminate();
+                peers.remove(i);
+            }
+            break;
+        case "get":
+            createQuery(inputScanner.next());
+            break;
+        default:
+            System.out.println("Unknown command, please try again");
+        }
+    }
+
     // INITIATION:
-    public static void initWelcomeSockets() throws FileNotFoundException {
+    public static void initWelcomeSockets() {
+        File config_peers = new File("config_peer.txt");
 
-        File config_neighbors = new File("config_peer.txt");
-        Scanner portScanner = new Scanner(config_neighbors);
+        try {
+            Scanner portScanner = new Scanner(config_peers);
 
-        requestWelcomeHandler = new RequestWelcomeHandler(portScanner.nextInt());
-        fileWelcomeHandler = new FileWelcomeHandler(portScanner.nextInt());
+            requestWelcomeHandler = new RequestWelcomeHandler(portScanner.nextInt());
+            fileWelcomeHandler = new FileWelcomeHandler(portScanner.nextInt());
 
-        portScanner.close();
+            portScanner.close();
+        } catch (FileNotFoundException e) {
+            System.out.println("The config_peer file is not found to establish peers");
+        }
     }
 
     public static void startWelcomeSockets() {
@@ -83,28 +127,37 @@ public class p2p {
         fileWelcomeHandler.start();
     }
 
-    public static void initNeighborConnections() throws FileNotFoundException, UnknownHostException, IOException {
-
+    public static void initNeighborConnections() {
         File config_neighbors = new File("config_neighbors.txt");
-        Scanner neighborScanner = new Scanner(config_neighbors);
 
-        while (neighborScanner.hasNext()) {
-            String ip = neighborScanner.next();
-            int port = neighborScanner.nextInt();
-
-            System.out.print("Attempting to connect to peer: " + ip + ":" + port + "... ");
-
-            try {
-                RequestHandler connection = new RequestSender(new Socket(ip, port));
-                System.out.println("Success");
-                peers.add(connection);
-            } catch (ConnectException e) {
-                // Can't connect
-                System.out.println("Failure");
-            }
+        Scanner neighborScanner = null;
+        try {
+            neighborScanner = new Scanner(config_neighbors);
+        } catch (FileNotFoundException e) {
+            System.out.println("The config_neighbors file is not found to establish neighbors");
         }
 
-        neighborScanner.close();
+        if (neighborScanner != null) {
+            while (neighborScanner.hasNext()) {
+                String ip = neighborScanner.next();
+                int port = neighborScanner.nextInt();
+
+                System.out.print("Attempting to connect to peer: " + ip + ":" + port + "... ");
+
+                try {
+                    RequestHandler connection = new RequestSender(new Socket(ip, port));
+                    System.out.println("Success");
+                    peers.add(connection);
+                } catch (ConnectException e) {
+                    System.out.println("Failure");
+                } catch (UnknownHostException e) {
+                    System.out.println("Failure");
+                } catch (IOException e) {
+                    System.out.println("Failure");
+                }
+            }
+            neighborScanner.close();
+        }
     }
 
     public static void startNeighborConnections() {
@@ -113,28 +166,33 @@ public class p2p {
         }
     }
 
-    public static void findMyFiles() throws FileNotFoundException {
+    public static void findMyFiles() {
 
         File config_sharing = new File("config_sharing.txt");
-        Scanner fileScanner = new Scanner(config_sharing);
 
-        while (fileScanner.hasNext()) {
-            myFiles.add(fileScanner.next());
+        try {
+            Scanner fileScanner = new Scanner(config_sharing);
+
+            while (fileScanner.hasNext()) {
+                myFiles.add(fileScanner.next());
+            }
+        } catch (FileNotFoundException e) {
+            System.out.println("Shared files file is not found");
         }
     }
 
     // QUERIES
-    public static void floodPeers(Query nextQuery) throws IOException {
+    public static void floodPeers(Query nextQuery) {
 
         for (RequestHandler connection : peers) {
             connection.sendQuery(nextQuery);
         }
+
         System.out.println("Sending query: " + nextQuery.getID());
 
     }
 
-    // REQUEST QUERIES:
-    public static void createQuery(String filename) throws IOException {
+    public static void createQuery(String filename) {
 
         String queryID = myHost + filename;
         Query nextQuery = new Query(false, queryID, filename);
@@ -143,25 +201,24 @@ public class p2p {
         floodPeers(nextQuery);
     }
 
-    public static void forwardRequestQuery(Query nextQuery) throws IOException {
+    public static void forwardRequestQuery(Query nextQuery) {
         requestQueries.put(nextQuery.getID(), nextQuery);
 
         floodPeers(nextQuery);
     }
 
-    // RESPONSE QUERIES:
-    public static void forwardResponseQuery(Query response) throws IOException {
+    public static void forwardResponseQuery(Query response) {
         String destinationIP = requestQueries.get(response.getID()).getPreviousIP();
-        
+
         incomingPeers.get(destinationIP).sendQuery(response);
     }
 
     // GETTERS
-    public static Map<String, Query> getPersonalResponses() {
-        return personalResponses;
-    }
+    // public static Map<String, Query> getPersonalResponses() {
+    // return personalResponses;
+    // }
 
-    public static String getFileSocketIP() {
+    public static String getIP() {
         return myHost;
     }
 
@@ -169,66 +226,64 @@ public class p2p {
         return fileWelcomeHandler.getPort();
     }
 
-    public static Map<String, Query> getRequestQueries() {
-        return requestQueries;
-    }
+    // public static Map<String, Query> getRequestQueries() {
+    // return requestQueries;
+    // }
 
-    public static Map<String, Query> getResponseQueries() {
-        return responseQueries;
-    }
+    // public static Map<String, Query> getResponseQueries() {
+    // return responseQueries;
+    // }
 
     // INFO GETTERS
     public static boolean hasFile(String filename) {
         return myFiles.contains(filename);
     }
 
-    public static boolean seenRequest(String queryID){
+    public static boolean seenRequest(String queryID) {
         return requestQueries.containsKey(queryID);
     }
 
-    public static boolean seenResponse(String queryID){
+    public static boolean seenResponse(String queryID) {
         return responseQueries.containsKey(queryID);
     }
 
-    public static boolean myResponse(String queryID) {
+    public static boolean responseForMe(String queryID) {
         return personalQueries.containsKey(queryID);
     }
 
-    //ADDERS
-    public static void addPersonalResponse(Query responseQuery){
-        
-        String queryID = responseQuery.getID();
+    // public static boolean hasRequest(Query request) {
+    //     return requestQueries.containsKey(request.getFilename());
+    // }
 
-        personalResponses.put(queryID, responseQuery);
-        responseQueries.put(queryID, responseQuery);
+    // ADDERS
+    // public static void addPersonalResponse(Query responseQuery) {
 
-    }
+    //     String queryID = responseQuery.getID();
 
-    public static void addResponseQuery(Query responseQuery){
+    //     personalResponses.put(queryID, responseQuery);
+    //     responseQueries.put(queryID, responseQuery);
+
+    // }
+
+    public static void addResponse(Query responseQuery) {
         responseQueries.put(responseQuery.getID(), responseQuery);
     }
-
-    // SETTERS
-    public static void addIncoming(RequestReceiver incomingPeer) {
-        incomingPeers.put(incomingPeer.getIP(), incomingPeer);
-    }
-
 
     public static void addRequest(Query request) {
         requestQueries.put(request.getFilename(), request);
     }
 
-    public static boolean hasRequest(Query request) {
-        return requestQueries.containsKey(request.getFilename());
+    public static void addIncoming(RequestReceiver incomingPeer) {
+        incomingPeers.put(incomingPeer.getIP(), incomingPeer);
     }
 
-    //CLEANUP
+    // CLEANUP
 
-    public static void removeRequestReceiver(String IP){
+    public static void removeRequestReceiver(String IP) {
         incomingPeers.remove(IP);
     }
 
-    public static void removeRequestSender(RequestHandler deadThread){
+    public static void removeRequestSender(RequestHandler deadThread) {
         peers.remove(deadThread);
     }
 
@@ -242,68 +297,9 @@ public class p2p {
             fileReceiver.start();
 
         } catch (UnknownHostException e) {
-            System.out.println("Unknown Host");
+            System.out.println("Can't find specified host");
         } catch (IOException e) {
             System.out.println("IOException");
-        }
-    }
-
-    // P2P FUNCTIONALITY
-    public static void parseInput(String input) throws IOException {
-        Scanner inputScanner = new Scanner(input);
-        String command = inputScanner.next();
-        command = command.toLowerCase();
-
-        switch (command) {
-        case "connect":
-            initNeighborConnections();
-            startNeighborConnections();
-            break;
-        case "exit":
-
-            //Stop the requestWelcomeHandler
-                //Close the server socket
-                //open = false so the loop will exit
-            //Stop the fileWelcomeHandler
-                //Close the socket
-                //open=false so that the loop will exit
-            //Stop each of the incoming connections
-                //Stop the timeout timer and close timer
-                //Send close message into socket
-                //Close the DIS
-                //Close the DOS
-                //Close the socket
-            //Stop each of the outgoing connections
-                //Stop the heartbeat timer
-                //Send close into the socket
-                //Set open=false
-                //Close the DIS
-                //Close the DOS
-                //Close the socket
-            requestWelcomeHandler.terminate();
-            fileWelcomeHandler.terminate();
-            for (RequestHandler connection : peers) {
-                connection.terminate();
-            }
-
-            for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()){
-                entry.getValue().terminate();
-            }
-
-            running = false;
-            break;
-        case "leave":
-            for (int i = 0; i < peers.size(); i++){
-                RequestHandler target = peers.get(i);
-                target.terminate();
-                peers.remove(i);
-            }
-            break;
-        case "get":
-            createQuery(inputScanner.next());
-            break;
-        default:
-            System.out.println("Unknown command, please try again");
         }
     }
 

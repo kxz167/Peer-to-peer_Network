@@ -11,17 +11,27 @@ public abstract class FileHandler extends Thread{
     protected DataOutputStream dos;
     protected boolean open;
 
-    protected Timer heartbeatTimer = new Timer();
+    // protected Timer heartbeatTimer = new Timer();
 
-    public FileHandler (Socket socket)throws IOException{
-        this.socket = socket;
-        this.dis = new DataInputStream(socket.getInputStream());
-        this.dos = new DataOutputStream(socket.getOutputStream());
+    public FileHandler (Socket socket){
+        try{
+            this.socket = socket;
+            this.dis = new DataInputStream(socket.getInputStream());
+            this.dos = new DataOutputStream(socket.getOutputStream());
+        }
+        catch (IOException e){
+            System.out.println("Error creating the socket for the file handler");
+        }
     }
 
-    public void terminate()throws IOException{
-        heartbeatTimer.cancel();
-        dos.writeUTF("Close");
-        socket.close();
+    public void terminate(){
+        try{
+            dis.close();
+            dos.close();
+            socket.close();
+        }
+        catch (IOException e){
+            System.out.println("Sockets closed");
+        }
     }
 }

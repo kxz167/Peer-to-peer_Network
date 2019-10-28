@@ -17,12 +17,18 @@ public class FileWelcomeHandler extends Thread {
         this.portNumber = port;
     }
 
-    public void terminate() throws IOException {
+    public void terminate(){
         for (FileSender connection : openConnections) {
             connection.terminate();
         }
         open = false;
-        serverSocket.close();
+
+        try{
+            serverSocket.close();
+        }
+        catch(IOException e){
+            System.out.println("The serverSocket was closed.");
+        }
     }
 
     @Override
@@ -30,35 +36,33 @@ public class FileWelcomeHandler extends Thread {
         try {
             serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            System.out.println("Could not create the FileWelcomePort");
         }
 
         while (open) {
-            Socket clientSocket;
+            Socket clientSocket = null;
             try {
-                if (open) {
-                    clientSocket = serverSocket.accept();
-
-                    // System.out.println("Accepting connection");
-                    FileSender newFileSender = new FileSender(clientSocket);
-
-                    // System.out.println("Start filesender");
-                    newFileSender.start();
-                    openConnections.add(newFileSender);
-                }
-
+                clientSocket = serverSocket.accept();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
+                System.out.println("Could not accept the incoming connection");
             }
 
+            if (clientSocket != null) {
+
+                FileSender newFileSender = new FileSender(clientSocket);
+
+                newFileSender.start();
+                openConnections.add(newFileSender);
+
+            }
         }
     }
 
-    public String getIP(){
+    public String getIP() {
         return serverSocket.getInetAddress().getHostAddress();
     }
 
-    public int getPort(){
+    public int getPort() {
         return serverSocket.getLocalPort();
     }
 }

@@ -9,12 +9,8 @@ import java.net.Socket;
 
 public class FileSender extends FileHandler {
 
-    public FileSender(Socket socket) throws IOException {
+    public FileSender(Socket socket){
         super(socket);
-    }
-
-    public void terminate() throws IOException {
-        socket.close();
     }
 
     @Override
@@ -50,7 +46,9 @@ public class FileSender extends FileHandler {
 
             dos.flush();
             bis.close();
+
             this.terminate();
+
         } catch (IOException e) {
             System.out.println("Failed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
         }
