@@ -15,6 +15,7 @@ public class FileSender extends FileHandler {
 
     @Override
     public void run() {
+        String destination = this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort();
         // Push requested file into the data output stream.
         try {
             String filename = dis.readUTF();
@@ -26,7 +27,7 @@ public class FileSender extends FileHandler {
             long fileLength = file.length();
             long currentPos = 0;
 
-            System.out.println(filename + " requested by: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
+            System.out.println(filename + " requested by: " + destination);
 
             while (currentPos != fileLength) {
                 int pushSize = 1024;
@@ -42,7 +43,7 @@ public class FileSender extends FileHandler {
                 dos.write(buffer);
             }
 
-            System.out.println("Completed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
+            System.out.println("Completed sending file to: " + destination);
 
             dos.flush();
             bis.close();
@@ -50,7 +51,7 @@ public class FileSender extends FileHandler {
             this.terminate();
 
         } catch (IOException e) {
-            System.out.println("Failed sending file to: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
+            System.out.println("Failed sending file to: " + destination);
         }
     }
 }

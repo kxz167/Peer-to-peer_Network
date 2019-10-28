@@ -10,7 +10,6 @@ public class RequestWelcomeHandler extends Thread {
     private int portNumber;
     private ServerSocket serverSocket;
     private boolean open = true;
-    // private List<Thread> clientSockets = new ArrayList<>();
 
     private List<RequestReceiver> openConnections = new ArrayList<>();
 
@@ -18,14 +17,19 @@ public class RequestWelcomeHandler extends Thread {
         this.portNumber = port;
     }
 
-    public void terminate() throws IOException {
+    public void terminate() {
         for (RequestReceiver connection : openConnections) {
             connection.terminate();
         }
 
         open = false;
 
-        serverSocket.close();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            System.out.println("Server socket closed");
+        }
+
     }
 
     @Override
@@ -33,27 +37,27 @@ public class RequestWelcomeHandler extends Thread {
         try {
             serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
+            System.out.println("Error creating Request welcome socket");
         }
 
         while (open) {
+            Socket clientSocket = null;
             try {
-                Socket clientSocket = serverSocket.accept();
-                if (open) {
-                    RequestReceiver newHandler = new RequestReceiver(clientSocket);
-
-                    
-                    System.out.println("Accepting connection from : " + clientSocket.getInetAddress().getHostAddress() + ":" + clientSocket.getPort());
-                    
-                    newHandler.start();
-
-                    p2p.addIncoming(newHandler);
-
-                }
-
+                clientSocket = serverSocket.accept();
+            } catch (IOException e) {
+                // Silent on accept interrupt
+                // System.out.println("Could not accept the incoming connection");
             }
 
-            catch (IOException e) {
+            if (clientSocket != null) {
+                RequestReceiver newHandler = new RequestReceiver(clientSocket);
+
+                System.out.println("Accepting connection from : " + clientSocket.getInetAddress().getHostAddress() + ":"
+                        + clientSocket.getPort());
+
+                newHandler.start();
+
+                p2p.addIncoming(newHandler);
             }
         }
     }

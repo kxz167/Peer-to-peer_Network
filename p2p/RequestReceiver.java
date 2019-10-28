@@ -10,7 +10,7 @@ public class RequestReceiver extends RequestHandler {
 
     private long TIMEOUT = 60000L;
 
-    public RequestReceiver(Socket socket) throws IOException {
+    public RequestReceiver(Socket socket) {
         super(socket);
     }
 
@@ -29,7 +29,6 @@ public class RequestReceiver extends RequestHandler {
             }
 
             if (open) {
-                // Filter through results
                 switch (input) {
                 case "Heartbeat":
                     System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"
@@ -40,12 +39,14 @@ public class RequestReceiver extends RequestHandler {
                     terminate();
                     p2p.removeRequestReceiver(getIP());
                     break;
+                case "":
+                    // Catch when connection forcefuly disconnected
+                    break;
                 default:
                     // A request was received
-                    try {
-                        handleRequest(requestFrom(input));
-                    } catch (IOException e) {
-                    }
+
+                    handleRequest(requestFrom(input));
+
                     break;
                 }
             }
@@ -53,7 +54,7 @@ public class RequestReceiver extends RequestHandler {
     }
 
     public void refreshTimer() {
-        if(heartbeat != null)
+        if (heartbeat != null)
             heartbeat.cancel();
 
         heartbeatTimer.purge();
@@ -74,7 +75,7 @@ public class RequestReceiver extends RequestHandler {
         heartbeatTimer.schedule(heartbeat, TIMEOUT);
     }
 
-    public Query requestFrom(String input){
+    public Query requestFrom(String input) {
 
         System.out.println("Request Query Received from: " + this.socket.getInetAddress().getHostAddress() + ":"
                 + this.socket.getPort());
@@ -82,9 +83,7 @@ public class RequestReceiver extends RequestHandler {
         Scanner inputScanner = new Scanner(input);
 
         // Current request structure: Q:(query ID);(short string)
-        inputScanner.useDelimiter(":");
-        String queryType = inputScanner.next();
-        inputScanner.skip(":");
+        inputScanner.skip("Q:");
 
         // Current request structure: (query ID);(short string)
         inputScanner.useDelimiter(";");
@@ -97,7 +96,7 @@ public class RequestReceiver extends RequestHandler {
 
     }
 
-    public void handleRequest(Query receivedQuery) throws IOException{
+    public void handleRequest(Query receivedQuery) {
         String filename = receivedQuery.getFilename();
 
         // What is the next steps?
@@ -121,18 +120,17 @@ public class RequestReceiver extends RequestHandler {
     }
 
     @Override
-    public void sendQuery(Query nextQuery){
-        try{
-        this.dos.writeUTF("R:" + nextQuery.getID() + ";" + nextQuery.getPeerIP() + ":" + nextQuery.getPeerPort() + ";"
-                + nextQuery.getFilename());
-        }
-        catch(IOException e){
+    public void sendQuery(Query nextQuery) {
+        try {
+            this.dos.writeUTF("R:" + nextQuery.getID() + ";" + nextQuery.getPeerIP() + ":" + nextQuery.getPeerPort()
+                    + ";" + nextQuery.getFilename());
+        } catch (IOException e) {
             System.out.println("Error sending out response query");
         }
     }
 
     @Override
-    public void erase(){
+    public void erase() {
         p2p.removeRequestReceiver(getIP());
     }
 

@@ -44,7 +44,8 @@ public class FileWelcomeHandler extends Thread {
             try {
                 clientSocket = serverSocket.accept();
             } catch (IOException e) {
-                System.out.println("Could not accept the incoming connection");
+                // Silent on accept interrupt
+                // System.out.println("Could not accept the incoming connection");
             }
 
             if (clientSocket != null) {
@@ -56,10 +57,6 @@ public class FileWelcomeHandler extends Thread {
 
             }
         }
-    }
-
-    public String getIP() {
-        return serverSocket.getInetAddress().getHostAddress();
     }
 
     public int getPort() {

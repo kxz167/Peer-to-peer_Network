@@ -23,7 +23,7 @@ import java.net.UnknownHostException;
 
 public class p2p {
 
-    private static String myHost;
+    private static String myHost ="";
 
     private static List<String> myFiles = new ArrayList<>();
 
@@ -41,10 +41,15 @@ public class p2p {
     private static Map<String, Query> responseQueries = new TreeMap<>();
     // private static Map<String, Query> personalResponses = new TreeMap<>();
 
-    public static void main(String[] args) throws IOException, UnknownHostException {
+    public static void main(String[] args){
 
         // Set frequently accessed host name
-        myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName()).getHostAddress();
+        try{
+            myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName()).getHostAddress();
+        }
+        catch(IOException e){
+            System.out.println("Can't find this host address");
+        }
 
         System.out.println("Starting host: " + myHost);
 
@@ -57,16 +62,27 @@ public class p2p {
 
         // Take commands
         while (running) {
-            parseInput(inputReader.readLine());
+            try{
+                parseInput(inputReader.readLine());
+            }
+            catch(IOException e){
+                System.out.println("Cannot read the line in from the user");
+            }
         }
 
-        inputReader.close();
+        try{
+            inputReader.close();
+        }
+        catch(IOException e){
+            System.out.println("Error closing the inputReader");
+        }
     }
 
     // P2P FUNCTIONALITY
-    public static void parseInput(String input) throws IOException {
+    public static void parseInput(String input) {
         Scanner inputScanner = new Scanner(input);
         String command = inputScanner.next();
+
         command = command.toLowerCase();
 
         switch (command) {
@@ -75,23 +91,9 @@ public class p2p {
             startNeighborConnections();
             break;
         case "exit":
-            requestWelcomeHandler.terminate();
-            fileWelcomeHandler.terminate();
-
-            // Close all peers
-            for (RequestHandler connection : peers) {
-                connection.terminate();
-            }
-
-            // Close all incoming peers
-            for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()) {
-                entry.getValue().terminate();
-            }
-
-            running = false;
+            terminate();
             break;
         case "leave":
-            // Close all the peers and remove them from the list
             for (int i = 0; i < peers.size(); i++) {
                 RequestHandler target = peers.get(i);
                 target.terminate();
@@ -104,6 +106,8 @@ public class p2p {
         default:
             System.out.println("Unknown command, please try again");
         }
+
+        inputScanner.close();
     }
 
     // INITIATION:
@@ -176,6 +180,8 @@ public class p2p {
             while (fileScanner.hasNext()) {
                 myFiles.add(fileScanner.next());
             }
+
+            fileScanner.close();
         } catch (FileNotFoundException e) {
             System.out.println("Shared files file is not found");
         }
@@ -214,10 +220,6 @@ public class p2p {
     }
 
     // GETTERS
-    // public static Map<String, Query> getPersonalResponses() {
-    // return personalResponses;
-    // }
-
     public static String getIP() {
         return myHost;
     }
@@ -225,14 +227,6 @@ public class p2p {
     public static int getFileSocketPort() {
         return fileWelcomeHandler.getPort();
     }
-
-    // public static Map<String, Query> getRequestQueries() {
-    // return requestQueries;
-    // }
-
-    // public static Map<String, Query> getResponseQueries() {
-    // return responseQueries;
-    // }
 
     // INFO GETTERS
     public static boolean hasFile(String filename) {
@@ -251,20 +245,7 @@ public class p2p {
         return personalQueries.containsKey(queryID);
     }
 
-    // public static boolean hasRequest(Query request) {
-    //     return requestQueries.containsKey(request.getFilename());
-    // }
-
     // ADDERS
-    // public static void addPersonalResponse(Query responseQuery) {
-
-    //     String queryID = responseQuery.getID();
-
-    //     personalResponses.put(queryID, responseQuery);
-    //     responseQueries.put(queryID, responseQuery);
-
-    // }
-
     public static void addResponse(Query responseQuery) {
         responseQueries.put(responseQuery.getID(), responseQuery);
     }
@@ -278,13 +259,29 @@ public class p2p {
     }
 
     // CLEANUP
-
     public static void removeRequestReceiver(String IP) {
         incomingPeers.remove(IP);
     }
 
     public static void removeRequestSender(RequestHandler deadThread) {
         peers.remove(deadThread);
+    }
+
+    public static void terminate() {
+        requestWelcomeHandler.terminate();
+        fileWelcomeHandler.terminate();
+
+        // Close all peers
+        for (RequestHandler connection : peers) {
+            connection.terminate();
+        }
+
+        // Close all incoming peers
+        for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()) {
+            entry.getValue().terminate();
+        }
+
+        running = false;
     }
 
     // FILE RETREIVAL

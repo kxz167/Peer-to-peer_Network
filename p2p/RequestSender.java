@@ -7,8 +7,8 @@ import java.util.TimerTask;
 import java.util.Scanner;
 
 public class RequestSender extends RequestHandler {
-
-    public RequestSender(Socket socket) throws IOException {
+    private Long BEAT_INTERVAL = 30000L;
+    public RequestSender(Socket socket) {
         super(socket);
     }
 
@@ -25,13 +25,12 @@ public class RequestSender extends RequestHandler {
                             + socket.getPort());
 
                 } catch (IOException e) {
-                    // e.printStackTrace();
+                    System.out.println("Error writing to the socket");
                 }
             }
         };
 
-        Long heartbeatInterval = 30000L;
-        heartbeatTimer.scheduleAtFixedRate(heartbeat, heartbeatInterval, heartbeatInterval);
+        heartbeatTimer.scheduleAtFixedRate(heartbeat, BEAT_INTERVAL, BEAT_INTERVAL);
 
         // Waits for incoming responses
         while (open) {
@@ -41,9 +40,9 @@ public class RequestSender extends RequestHandler {
                 input = dis.readUTF();
 
             } catch (IOException e) {
-                // e.printStackTrace();
+                // Silent personal exit
+                // System.out.println("Error reading from the socket");
             }
-
             switch (input) {
             case "Close":
                 terminate();
@@ -51,25 +50,19 @@ public class RequestSender extends RequestHandler {
                 break;
             default:
                 if (open) {
-                    try {
-                        handleResponse(responseFrom(input));
-                    } catch (IOException e) {
-
-                    }
+                    handleResponse(responseFrom(input));
                 }
+                break;
             }
-
         }
     }
 
-    public Query responseFrom(String input) throws IOException {
+    public Query responseFrom(String input) {
 
         Scanner inputScanner = new Scanner(input);
 
         // Current request structure: R:(query ID);(peerIP:port);(filename)
-        inputScanner.useDelimiter(":");
-        String queryType = inputScanner.next();
-        inputScanner.skip(":");
+        inputScanner.skip("R:");
 
         // Current request structure: (query ID);(peerIP:port);(filename)
         inputScanner.useDelimiter(";");
@@ -87,10 +80,12 @@ public class RequestSender extends RequestHandler {
 
         String filename = inputScanner.next();
 
+        inputScanner.close();
+
         return new Query(true, queryID, peerIP, peerPort, filename, this.socket.getInetAddress().getHostAddress());
     }
 
-    public void handleResponse(Query receivedQuery) throws IOException {
+    public void handleResponse(Query receivedQuery) {
         String queryID = receivedQuery.getID();
 
         if (!p2p.seenResponse(queryID)) {
@@ -109,11 +104,10 @@ public class RequestSender extends RequestHandler {
     }
 
     @Override
-    public void sendQuery(Query nextQuery){
-        try{
+    public void sendQuery(Query nextQuery) {
+        try {
             this.dos.writeUTF("Q:" + nextQuery.getID() + ";" + nextQuery.getFilename());
-        }
-        catch (IOException e){
+        } catch (IOException e) {
             System.out.println("Error while sending query");
         }
     }
