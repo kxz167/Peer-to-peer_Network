@@ -39,17 +39,26 @@ public class RequestSender extends RequestHandler {
 
             try {
                 input = dis.readUTF();
+
             } catch (IOException e) {
                 // e.printStackTrace();
             }
-            if(open){
-                try {
-                    handleResponse(responseFrom(input));
-                } catch (IOException e) {
-    
+
+            switch (input) {
+            case "Close":
+                terminate();
+                p2p.removeRequestSender(this);
+                break;
+            default:
+                if (open) {
+                    try {
+                        handleResponse(responseFrom(input));
+                    } catch (IOException e) {
+
+                    }
                 }
             }
-            
+
         }
     }
 
@@ -78,11 +87,10 @@ public class RequestSender extends RequestHandler {
 
         String filename = inputScanner.next();
 
-        return new Query(true, queryID, peerIP, peerPort, filename,
-                this.socket.getInetAddress().getHostAddress());
+        return new Query(true, queryID, peerIP, peerPort, filename, this.socket.getInetAddress().getHostAddress());
     }
 
-    public void handleResponse(Query receivedQuery) throws IOException{
+    public void handleResponse(Query receivedQuery) throws IOException {
         String queryID = receivedQuery.getID();
 
         if (!p2p.seenResponse(queryID)) {
@@ -106,7 +114,7 @@ public class RequestSender extends RequestHandler {
     }
 
     @Override
-    public void erase(){
+    public void erase() {
         p2p.removeRequestSender(this);
     }
 }

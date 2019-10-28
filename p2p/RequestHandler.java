@@ -30,7 +30,7 @@ public abstract class RequestHandler extends Thread{
             heartbeatTimer.cancel();
     
             dos.writeUTF("Close");
-    
+            
             dis.close();
             dos.close();
     

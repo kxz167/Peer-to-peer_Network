@@ -47,7 +47,7 @@ public class p2p {
     public static void main(String[] args) throws IOException, UnknownHostException {
 
         // Set frequently accessed host name
-        myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName() + ".case.edu").getHostAddress();
+        myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName()).getHostAddress();
 
         System.out.println("Starting host: " + myHost);
 
@@ -224,8 +224,8 @@ public class p2p {
 
     //CLEANUP
 
-    public static void removeRequestReceiver(RequestHandler deadThread){
-        incomingPeers.remove(deadThread);
+    public static void removeRequestReceiver(String IP){
+        incomingPeers.remove(IP);
     }
 
     public static void removeRequestSender(RequestHandler deadThread){
@@ -286,13 +286,18 @@ public class p2p {
                 connection.terminate();
             }
 
-            // incomingPeers.forEach((ip, handler)->{ handler.terminate();});
-
             for (Map.Entry<String, RequestHandler> entry : incomingPeers.entrySet()){
                 entry.getValue().terminate();
             }
 
             running = false;
+            break;
+        case "leave":
+            for (int i = 0; i < peers.size(); i++){
+                RequestHandler target = peers.get(i);
+                target.terminate();
+                peers.remove(i);
+            }
             break;
         case "get":
             createQuery(inputScanner.next());

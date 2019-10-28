@@ -25,37 +25,31 @@ public class RequestReceiver extends RequestHandler {
             try {
                 input = dis.readUTF();
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
             }
 
-            // Filter through results
-            switch (input) {
-            case "Heartbeat":
-                System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"
-                        + socket.getPort());
-                refreshTimer();
-                break;
-            case "Close":
-                open = false;// Close the socket
-                try {
-                    socket.close();
-                } catch (IOException e) {
-
+            if (open) {
+                // Filter through results
+                switch (input) {
+                case "Heartbeat":
+                    System.out.println("Heartbeat received from: " + this.socket.getInetAddress().getHostAddress() + ":"
+                            + socket.getPort());
+                    refreshTimer();
+                    break;
+                case "Close":
+                    terminate();
+                    p2p.removeRequestReceiver(getIP());
+                    break;
+                default:
+                    // A request was received
+                    try {
+                        handleRequest(requestFrom(input));
+                    } catch (IOException e) {
+                    }
+                    break;
                 }
-                break;
-            default:
-                // A request was received
-                try {
-                    handleRequest(requestFrom(input));
-                } catch (IOException e) {
-                }
-                break;
             }
         }
-
-        // Gets input requests
-
-        //
     }
 
     public void refreshTimer() {
@@ -134,7 +128,7 @@ public class RequestReceiver extends RequestHandler {
 
     @Override
     public void erase(){
-        p2p.removeRequestReceiver(this);
+        p2p.removeRequestReceiver(getIP());
     }
 
 }
