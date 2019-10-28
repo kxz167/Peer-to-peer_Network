@@ -45,7 +45,7 @@ public class p2p {
 
         // Set frequently accessed host name
         try{
-            myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName()).getHostAddress();
+            myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName() + ".case.edu").getHostAddress();
         }
         catch(IOException e){
             System.out.println("Can't find this host address");
