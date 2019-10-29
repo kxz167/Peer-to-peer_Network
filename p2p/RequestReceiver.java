@@ -115,6 +115,7 @@ public class RequestReceiver extends RequestHandler {
                 p2p.forwardRequestQuery(receivedQuery);
             }
         } else {
+            System.out.println("Request Seen, dropping");
             // Request received before, drop.
         }
     }

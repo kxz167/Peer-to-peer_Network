@@ -89,6 +89,8 @@ public class RequestSender extends RequestHandler {
         String queryID = receivedQuery.getID();
 
         if (!p2p.seenResponse(queryID)) {
+            p2p.addResponse(receivedQuery);
+            
             // No, what next?
             if (p2p.responseForMe(queryID)) {
                 // Its for me, lets start downloading
@@ -97,7 +99,6 @@ public class RequestSender extends RequestHandler {
                 // Not mine, forward the response:
                 p2p.forwardResponseQuery(receivedQuery);
             }
-            p2p.addResponse(receivedQuery);
         } else {
             // Already responded to so drop response
         }
