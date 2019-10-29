@@ -100,8 +100,8 @@ public class p2p {
             for (int i = 0; i < peers.size(); i++) {
                 RequestHandler target = peers.get(i);
                 target.terminate();
-                peers.remove(i);
             }
+            peers.clear();
             connected = false;
             break;
         case "get":
