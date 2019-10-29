@@ -28,6 +28,7 @@ public class p2p {
     private static List<String> myFiles = new ArrayList<>();
 
     private static boolean running = true;
+    private static boolean connected = false;
 
     private static RequestWelcomeHandler requestWelcomeHandler;
     private static FileWelcomeHandler fileWelcomeHandler;
@@ -39,7 +40,6 @@ public class p2p {
     private static Map<String, Query> requestQueries = new TreeMap<>();
     private static Map<String, Query> personalQueries = new TreeMap<>();
     private static Map<String, Query> responseQueries = new TreeMap<>();
-    // private static Map<String, Query> personalResponses = new TreeMap<>();
 
     public static void main(String[] args){
 
@@ -87,8 +87,11 @@ public class p2p {
 
         switch (command) {
         case "connect":
-            initNeighborConnections();
-            startNeighborConnections();
+            if(!connected){
+                initNeighborConnections();
+                startNeighborConnections();
+                connected = true;
+            }
             break;
         case "exit":
             terminate();
@@ -99,6 +102,7 @@ public class p2p {
                 target.terminate();
                 peers.remove(i);
             }
+            connected = false;
             break;
         case "get":
             createQuery(inputScanner.next());
@@ -234,7 +238,7 @@ public class p2p {
     }
 
     public static boolean seenRequest(String queryID) {
-        return requestQueries.containsKey(queryID);
+        return requestQueries.containsKey(queryID) || personalQueries.containsKey(queryID);
     }
 
     public static boolean seenResponse(String queryID) {
