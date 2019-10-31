@@ -23,10 +23,12 @@ import java.net.UnknownHostException;
 
 public class p2p {
 
-    private static String myHost ="";
+    // Stores the peer hostname for repeated use
+    private static String myHost = "";
 
     private static List<String> myFiles = new ArrayList<>();
 
+    // Peer status booleans
     private static boolean running = true;
     private static boolean connected = false;
 
@@ -41,13 +43,12 @@ public class p2p {
     private static Map<String, Query> personalQueries = new TreeMap<>();
     private static Map<String, Query> responseQueries = new TreeMap<>();
 
-    public static void main(String[] args){
+    public static void main(String[] args) {
 
         // Set frequently accessed host name
-        try{
+        try {
             myHost = InetAddress.getByName(InetAddress.getLocalHost().getHostName() + ".case.edu").getHostAddress();
-        }
-        catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Can't find this host address");
         }
 
@@ -62,23 +63,26 @@ public class p2p {
 
         // Take commands
         while (running) {
-            try{
+            try {
                 parseInput(inputReader.readLine());
-            }
-            catch(IOException e){
+            } catch (IOException e) {
                 System.out.println("Cannot read the line in from the user");
             }
         }
 
-        try{
+        try {
             inputReader.close();
-        }
-        catch(IOException e){
+        } catch (IOException e) {
             System.out.println("Error closing the inputReader");
         }
     }
 
-    // P2P FUNCTIONALITY
+    /**
+     * Determines the command that is requested from the given string and triggers
+     * action
+     * 
+     * @param input The string that tholds the user input
+     */
     public static void parseInput(String input) {
         Scanner inputScanner = new Scanner(input);
         String command = inputScanner.next();
@@ -87,25 +91,28 @@ public class p2p {
 
         switch (command) {
         case "connect":
-            if(!connected){
+            if (!connected) {
                 initNeighborConnections();
                 startNeighborConnections();
                 connected = true;
             }
             break;
-        case "exit":
-            terminate();
+        case "get":
+            createQuery(inputScanner.next());
             break;
         case "leave":
+            // Gracefully terminates the outgoing peer connections
             for (int i = 0; i < peers.size(); i++) {
                 RequestHandler target = peers.get(i);
                 target.terminate();
             }
+
             peers.clear();
             connected = false;
+
             break;
-        case "get":
-            createQuery(inputScanner.next());
+        case "exit":
+            terminate();
             break;
         default:
             System.out.println("Unknown command, please try again");
@@ -114,7 +121,10 @@ public class p2p {
         inputScanner.close();
     }
 
-    // INITIATION:
+    /**
+     * Initiates the welcome sockets for both the files and requests. This takes in
+     * the peers to connect to from the config_peer.txt file
+     */
     public static void initWelcomeSockets() {
         File config_peers = new File("config_peer.txt");
 
@@ -130,11 +140,19 @@ public class p2p {
         }
     }
 
+    /**
+     * After the welcome sockets are created, we need to start them. They will begin
+     * listening after this
+     */
     public static void startWelcomeSockets() {
         requestWelcomeHandler.start();
         fileWelcomeHandler.start();
     }
 
+    /**
+     * We need to connect to the neighbors that are defined in the neighbors txt
+     * file. This will create a requestSender for each neighbor
+     */
     public static void initNeighborConnections() {
         File config_neighbors = new File("config_neighbors.txt");
 
@@ -147,20 +165,18 @@ public class p2p {
 
         if (neighborScanner != null) {
             while (neighborScanner.hasNext()) {
+                //Information for the neighbor to connect to
                 String ip = neighborScanner.next();
                 int port = neighborScanner.nextInt();
 
                 System.out.print("Attempting to connect to peer: " + ip + ":" + port + "... ");
 
+                //Initiating connection
                 try {
                     RequestHandler connection = new RequestSender(new Socket(ip, port));
                     System.out.println("Success");
                     peers.add(connection);
-                } catch (ConnectException e) {
-                    System.out.println("Failure");
-                } catch (UnknownHostException e) {
-                    System.out.println("Failure");
-                } catch (IOException e) {
+                } catch (Exception e) {
                     System.out.println("Failure");
                 }
             }
@@ -168,6 +184,9 @@ public class p2p {
         }
     }
 
+    /**
+     * Starts the 
+     */
     public static void startNeighborConnections() {
         for (RequestHandler handler : peers) {
             handler.start();
