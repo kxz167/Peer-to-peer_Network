@@ -44,12 +44,12 @@ public class FileSender extends FileHandler {
             while (currentPos != fileLength) {
 
                 int pushSize = 1024;
-                int difference = fileLength - currentPos;
+                int difference = (int) fileLength - currentPos;
 
                 if (difference >= pushSize) {
                     currentPos += pushSize;
                 } else {
-                    pushSize = (int) (difference);
+                    pushSize = difference;
                     currentPos = fileLength;
                 }
 
