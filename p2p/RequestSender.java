@@ -8,10 +8,18 @@ import java.util.Scanner;
 
 public class RequestSender extends RequestHandler {
     private Long BEAT_INTERVAL = 30000L;
+
+    /**
+     * Creates a new request sender which will send a request to the peer it is connected to
+     * @param socket The socket this connection is utilizing to connect to the peer
+     */
     public RequestSender(Socket socket) {
         super(socket);
     }
 
+    /**
+     * Override so that the requests can be sent to the peer without halting the main p2p program.
+     */
     @Override
     public void run() {
 
@@ -30,6 +38,7 @@ public class RequestSender extends RequestHandler {
             }
         };
 
+        //While we are open, keep sending in a heartbeat into the socket.
         heartbeatTimer.scheduleAtFixedRate(heartbeat, BEAT_INTERVAL, BEAT_INTERVAL);
 
         // Waits for incoming responses
@@ -40,7 +49,7 @@ public class RequestSender extends RequestHandler {
                 input = dis.readUTF();
 
             } catch (IOException e) {
-                // Silent personal exit
+                // Silent personal exit, could utilize logger.
                 // System.out.println("Error reading from the socket");
             }
             switch (input) {
@@ -57,6 +66,11 @@ public class RequestSender extends RequestHandler {
         }
     }
 
+    /**
+     * Creates a query based on the response protocol
+     * @param input The string representation of the query response
+     * @return Returns a new query that can be handled with the information from the input
+     */
     public Query responseFrom(String input) {
 
         Scanner inputScanner = new Scanner(input);
@@ -85,6 +99,10 @@ public class RequestSender extends RequestHandler {
         return new Query(true, queryID, peerIP, peerPort, filename, this.socket.getInetAddress().getHostAddress());
     }
 
+    /**
+     * Handles the response that was received at the requestSender. Will decide if the response is forwarded or not.
+     * @param receivedQuery The query that the peer has received.
+     */
     public void handleResponse(Query receivedQuery) {
         String queryID = receivedQuery.getID();
 
@@ -104,6 +122,10 @@ public class RequestSender extends RequestHandler {
         }
     }
 
+    /**
+     * Send out a query request to the connected peer
+     * @param nextQuery The query which is going to need to be sent out.
+     */
     @Override
     public void sendQuery(Query nextQuery) {
         try {
@@ -111,10 +133,5 @@ public class RequestSender extends RequestHandler {
         } catch (IOException e) {
             System.out.println("Error while sending query");
         }
-    }
-
-    @Override
-    public void erase() {
-        p2p.removeRequestSender(this);
     }
 }

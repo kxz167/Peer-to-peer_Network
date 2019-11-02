@@ -8,16 +8,25 @@ import java.util.TimerTask;
 
 public class RequestReceiver extends RequestHandler {
 
+    //The timeout in which case the connection should be closed
     private long TIMEOUT = 60000L;
 
+    /**
+     * Creates a new request receiver which will handle incoming connections to the peer.
+     * @param socket The socket which the handler will receive requests from other peers
+     */
     public RequestReceiver(Socket socket) {
         super(socket);
     }
 
+    /**
+     * Override the run to handle requests whithout interrupting the main p2p program
+     */
     @Override
     public void run() {
         // Heartbeat, set timer.
         refreshTimer();
+
         while (open) {
             String input = "";
 
@@ -28,6 +37,7 @@ public class RequestReceiver extends RequestHandler {
                 // e.printStackTrace();
             }
 
+            // As long as we're still open, handle the input
             if (open) {
                 switch (input) {
                 case "Heartbeat":
@@ -44,7 +54,6 @@ public class RequestReceiver extends RequestHandler {
                     break;
                 default:
                     // A request was received
-
                     handleRequest(requestFrom(input));
 
                     break;
@@ -53,6 +62,9 @@ public class RequestReceiver extends RequestHandler {
         }
     }
 
+    /**
+     * Refreshes the timer whenever we receive a heartbeat.
+     */
     public void refreshTimer() {
         if (heartbeat != null)
             heartbeat.cancel();
@@ -75,6 +87,11 @@ public class RequestReceiver extends RequestHandler {
         heartbeatTimer.schedule(heartbeat, TIMEOUT);
     }
 
+    /**
+     * Creates a new request query from the given input
+     * @param input The string representation of the query as specified by the protocol
+     * @return A new query object which is to be handled.
+     */
     public Query requestFrom(String input) {
 
         System.out.println("Request Query Received from: " + this.socket.getInetAddress().getHostAddress() + ":"
@@ -96,6 +113,10 @@ public class RequestReceiver extends RequestHandler {
 
     }
 
+    /**
+     * Handles whatever request was received from the other peer
+     * @param receivedQuery The query that is to be handled.
+     */
     public void handleRequest(Query receivedQuery) {
         String filename = receivedQuery.getFilename();
 
@@ -120,6 +141,10 @@ public class RequestReceiver extends RequestHandler {
         }
     }
 
+    /**
+     * Sends out a response to the peer which had sent the query.
+     * @param nextQuery The response which is to be sent to the peer, telling it where to request the file.
+     */
     @Override
     public void sendQuery(Query nextQuery) {
         try {
@@ -129,10 +154,4 @@ public class RequestReceiver extends RequestHandler {
             System.out.println("Error sending out response query");
         }
     }
-
-    @Override
-    public void erase() {
-        p2p.removeRequestReceiver(getIP());
-    }
-
 }

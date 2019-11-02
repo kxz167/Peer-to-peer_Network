@@ -15,6 +15,10 @@ public abstract class RequestHandler extends Thread{
     protected Timer heartbeatTimer = new Timer();
     protected TimerTask heartbeat = null;
 
+    /**
+     * Creates a new request handler (for requests and responses) from one peer to another
+     * @param socket The socket that the connection takes place on
+     */
     public RequestHandler (Socket socket){
         try{
             this.socket = socket;
@@ -26,9 +30,12 @@ public abstract class RequestHandler extends Thread{
         }
     }
 
+    /**
+     * Terminates the connection for the handler by stopping any kind of heartbeats and streams.
+     */
     public void terminate(){
         try{
-            // System.out.println("Termination of yes");
+
             open = false;
             
             heartbeat.cancel();
@@ -41,18 +48,15 @@ public abstract class RequestHandler extends Thread{
     
             socket.close();
 
-            // erase();
         }
         catch(IOException e){
-
+            //Silent termination of the sockets. Good place for loggers
         }
     }
 
     public String getIP(){
         return socket.getInetAddress().getHostAddress();
     }
-
-    public abstract void erase();
 
     public abstract void sendQuery(Query nextQuery);
 }

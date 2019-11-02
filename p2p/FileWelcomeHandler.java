@@ -13,10 +13,17 @@ public class FileWelcomeHandler extends Thread {
 
     private List<FileSender> openConnections = new ArrayList<>();
 
+    /**
+     * Returns a handler to manage file connections welcome socket
+     * @param port The port that the socket should be listening on
+     */
     public FileWelcomeHandler(int port) {
         this.portNumber = port;
     }
 
+    /**
+     * Method to terminate the welcome handler and end the thread.
+     */
     public void terminate(){
         for (FileSender connection : openConnections) {
             connection.terminate();
@@ -31,14 +38,19 @@ public class FileWelcomeHandler extends Thread {
         }
     }
 
+    /**
+     * Override to run the welcome handler on a separate thread with the given port.
+     */
     @Override
     public void run() {
-        try {
+        // Create the server socket on the port
+        try {    
             serverSocket = new ServerSocket(portNumber);
         } catch (IOException e) {
             System.out.println("Could not create the FileWelcomePort");
         }
 
+        //Keep accepting connections and creating a file sender.
         while (open) {
             Socket clientSocket = null;
             try {
@@ -59,6 +71,10 @@ public class FileWelcomeHandler extends Thread {
         }
     }
 
+    /**
+     * A getter to return the port associated with the FileWelcomeHandler.
+     * @return The port number for the fileWelcome handler used for responses.
+     */
     public int getPort() {
         return serverSocket.getLocalPort();
     }

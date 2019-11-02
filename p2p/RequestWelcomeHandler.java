@@ -13,10 +13,17 @@ public class RequestWelcomeHandler extends Thread {
 
     private List<RequestReceiver> openConnections = new ArrayList<>();
 
+    /**
+     * Create a new request welcome handler which will handle incoming connections
+     * @param port The port number the welcome socket will listen on.
+     */
     public RequestWelcomeHandler(int port) {
         this.portNumber = port;
     }
 
+    /**
+     * Terminate the welcome handler.
+     */
     public void terminate() {
         for (RequestReceiver connection : openConnections) {
             connection.terminate();
@@ -32,6 +39,9 @@ public class RequestWelcomeHandler extends Thread {
 
     }
 
+    /**
+     * Runs the welcome handler so that p2p does not have to block.
+     */
     @Override
     public void run() {
         try {
@@ -49,6 +59,7 @@ public class RequestWelcomeHandler extends Thread {
                 // System.out.println("Could not accept the incoming connection");
             }
 
+            
             if (clientSocket != null) {
                 RequestReceiver newHandler = new RequestReceiver(clientSocket);
 

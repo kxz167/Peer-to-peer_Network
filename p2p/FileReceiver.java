@@ -11,17 +11,29 @@ public class FileReceiver extends FileHandler {
 
     private String filename;
 
-    public FileReceiver(Socket socket, String filename){
+    /**
+     * Creates a new file receiver built from the file handler given a socket and
+     * filename
+     * 
+     * @param socket   The socket which the file receiver will use to receive the
+     *                 file
+     * @param filename The file name the handler will need to request from the peer
+     */
+    public FileReceiver(Socket socket, String filename) {
         super(socket);
         this.filename = filename;
     }
 
+    /**
+     * Override the run method to pull the file from the sender.
+     */
     @Override
     public void run() {
 
         System.out.println(
                 "Requesting file from: " + this.socket.getInetAddress().getHostAddress() + ":" + this.socket.getPort());
 
+        // Specify file output
         OutputStream fileOutput = null;
         try {
             fileOutput = new FileOutputStream("obtained/" + filename);
@@ -39,6 +51,7 @@ public class FileReceiver extends FileHandler {
                 System.out.println("Writing filename failed");
             }
 
+            // Read in the file at 1024 byte intervals
             int bytesRead = 0;
             byte[] buffer = new byte[1024];
 
@@ -50,6 +63,7 @@ public class FileReceiver extends FileHandler {
                 System.out.println("Error reading in the file from sender");
             }
 
+            // Cleanup
             try {
                 bos.flush();
                 bos.close();
