@@ -43,7 +43,7 @@ public class FileReceiver extends FileHandler {
 
         if (fileOutput != null) {
 
-            BufferedOutputStream bos = new BufferedOutputStream(fileOutput);
+            BufferedOutputStream bufferedOutput = new BufferedOutputStream(fileOutput);
 
             try {
                 dos.writeUTF(filename);
@@ -52,12 +52,12 @@ public class FileReceiver extends FileHandler {
             }
 
             // Read in the file at 1024 byte intervals
-            int bytesRead = 0;
+            int bytePos = 0;
             byte[] buffer = new byte[1024];
 
             try {
-                while ((bytesRead = dis.read(buffer)) != -1) {
-                    bos.write(buffer, 0, bytesRead);
+                while ((bytePos = dis.read(buffer)) != -1) {
+                    bufferedOutput.write(buffer, 0, bytePos);
                 }
             } catch (IOException e) {
                 System.out.println("Error reading in the file from sender");
@@ -65,8 +65,8 @@ public class FileReceiver extends FileHandler {
 
             // Cleanup
             try {
-                bos.flush();
-                bos.close();
+                bufferedOutput.flush();
+                bufferedOutput.close();
             } catch (IOException e) {
                 System.out.println("Errors cleaning up BufferedOutputStream");
             }

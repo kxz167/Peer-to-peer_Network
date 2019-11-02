@@ -32,7 +32,7 @@ public class FileSender extends FileHandler {
             String filename = dis.readUTF();
             File file = new File("shared/" + filename);
             FileInputStream fis = new FileInputStream(file);
-            BufferedInputStream bis = new BufferedInputStream(fis);
+            BufferedInputStream bufferedInput = new BufferedInputStream(fis);
 
             byte[] buffer;
             long fileLength = file.length();
@@ -42,16 +42,19 @@ public class FileSender extends FileHandler {
 
             // push the file into the socket 1024 bytes at a time.
             while (currentPos != fileLength) {
+
                 int pushSize = 1024;
-                if (fileLength - currentPos >= pushSize) {
+                int difference = fileLength - currentPos;
+
+                if (difference >= pushSize) {
                     currentPos += pushSize;
                 } else {
-                    pushSize = (int) (fileLength - currentPos);
+                    pushSize = (int) (difference);
                     currentPos = fileLength;
                 }
 
                 buffer = new byte[pushSize];
-                bis.read(buffer, 0, pushSize);
+                bufferedInput.read(buffer, 0, pushSize);
                 dos.write(buffer);
             }
 
@@ -59,7 +62,7 @@ public class FileSender extends FileHandler {
 
             //Cleanup
             dos.flush();
-            bis.close();
+            bufferedInput.close();
 
             this.terminate();
 
